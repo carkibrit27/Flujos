@@ -208,6 +208,9 @@ function checkPin() {
   <div class="tab" data-pg="proveedores">Proveedores</div>
   <div class="tab" data-pg="cuentas">Cuentas Internas</div>
   <div class="tab" data-pg="estados">Estados de Cuenta</div>
+  <div class="tab" data-pg="transferencias">Transf. Saldos</div>
+  <div class="tab" data-pg="iniciales">Saldos Iniciales</div>
+  <div class="tab" data-pg="balance">Balance General</div>
   <div class="tab" data-pg="arqueo">Arqueo del Dia</div>
   <div class="tab" data-pg="proyeccion">Proyeccion</div>
 </nav>
@@ -240,10 +243,17 @@ function checkPin() {
   <div class="card">
     <div class="ct">Registrar Entrada</div>
     <div class="g2">
-      <div class="fg"><label>Titulo</label><input id="f_tit" placeholder="Ej: Pago semana 21"></div>
+      <div class="fg"><label>Titulo / Referencia</label><input id="f_tit" placeholder="Ej: Pago semana 21 - Ref: 12345"></div>
       <div class="fg"><label>Cliente</label><select id="f_cli" onchange="calcPrev()"><option value="">-- Seleccionar --</option></select></div>
       <div class="fg"><label>Proveedor</label>
         <select id="f_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select></div>
+      <div class="fg"><label>Tipo de Entrada</label>
+        <select id="f_tipoEnt" onchange="onTipoEnt()">
+          <option value="normal">Normal (deposito completo)</option>
+          <option value="solocom">Solo Comision (paga comision sin depositar factura)</option>
+        </select>
+      </div>
+      <div id="f_facturaGrp" style="display:none" class="fg"><label>Importe Total Factura $ (informativo)</label><input type="number" id="f_factura" placeholder="0.00" oninput="calcPrev()"></div>
       <div class="fg"><label>Importe Depositado $</label><input type="number" id="f_imp" placeholder="0.00" oninput="calcPrev()"></div>
       <div class="fg"><label>Transferencia incluida $</label><input type="number" id="f_trn" placeholder="0.00" oninput="calcPrev()"></div>
       <div class="fg"><label>Fecha</label><input type="date" id="f_fec"></div>
@@ -452,6 +462,7 @@ function checkPin() {
           <option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option>
         </select>
         <button class="btn bg bsm" onclick="copyProvEC()">Copiar EC</button>
+        <button class="btn bg bsm" onclick="generarPDFProv(document.getElementById('fProvSel').value)">PDF</button>
       </div>
     </div>
     <div class="tw" id="tblProv"></div>
@@ -543,6 +554,148 @@ function checkPin() {
   </div>
 </div>
 
+<!-- TRANSFERENCIA ENTRE SALDOS -->
+
+<div id="pg-transferencias" class="pg">
+  <div class="warn-box">Mueve saldo entre cuentas sin afectar operaciones. Se refleja en ambos estados de cuenta.</div>
+  <div class="tc">
+    <div class="card">
+      <div class="ct">Nueva Transferencia de Saldo</div>
+      <div class="fg mb"><label>Tipo de Origen</label>
+        <select id="tr_tipoOrig" onchange="onTrOrigen()">
+          <option value="cliente">Cliente</option>
+          <option value="rlc">RLC</option>
+          <option value="ck">CK</option>
+        </select>
+      </div>
+      <div id="tr_origCliGrp" class="fg mb"><label>Cliente Origen</label>
+        <select id="tr_orig" onchange="onTrMonto()"><option value="">-- Seleccionar --</option></select>
+        <div class="sdsp" id="trOrigDisp">Saldo: <span id="trOrigV"></span></div>
+      </div>
+      <div class="fg mb"><label>Tipo de Destino</label>
+        <select id="tr_tipoDest" onchange="onTrDest()">
+          <option value="cliente">Cliente</option>
+          <option value="rlc">RLC</option>
+          <option value="ck">CK</option>
+        </select>
+      </div>
+      <div id="tr_destCliGrp" class="fg mb"><label>Cliente Destino</label>
+        <select id="tr_dest" onchange="onTrMonto()"><option value="">-- Seleccionar --</option></select>
+        <div class="sdsp" id="trDestDisp">Saldo: <span id="trDestV"></span></div>
+      </div>
+      <div class="fg mb"><label>Monto a Transferir $</label>
+        <input type="number" id="tr_monto" placeholder="0.00" oninput="onTrMonto()">
+      </div>
+      <div class="fg mb"><label>Concepto / Referencia</label>
+        <input id="tr_ref" placeholder="Ej: Ajuste saldo, Fondeo entre IDs...">
+      </div>
+      <div class="fg mb"><label>Fecha</label><input type="date" id="tr_fec"></div>
+      <div id="trPrev" class="al ai mb" style="display:none"></div>
+      <div id="trWarn" class="al aw mb" style="display:none"></div>
+      <button class="btn bp" style="width:100%" onclick="guardarTransferencia()">Registrar Transferencia</button>
+    </div>
+    <div class="card">
+      <div class="ct">Historial de Transferencias</div>
+      <div class="tw" id="tblTransferencias"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SALDOS INICIALES -->
+
+<div id="pg-iniciales" class="pg">
+  <div class="warn-box">Punto de arranque del sistema. Capturas una sola vez los saldos con los que cierras tu sistema actual. A partir de aqui todo se actualiza con movimientos reales.</div>
+
+  <!-- SECCION A: LO QUE DEBO -->
+
+  <div class="card mb">
+    <div class="ct">Seccion A -- Lo que Debo (Clientes, Subagentes, RLC, CK)</div>
+    <div class="g2">
+      <div class="fg"><label>Tipo de Acreedor</label>
+        <select id="sia_tipo" onchange="onSIATipo()">
+          <option value="cliente">Cliente con saldo a favor</option>
+          <option value="subagente">Subagente con saldo a favor</option>
+          <option value="rlc">RLC acumulado</option>
+          <option value="ck">CK acumulado</option>
+        </select>
+      </div>
+      <div id="sia_cliGrp" class="fg"><label>Cliente</label>
+        <select id="sia_cli"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div id="sia_subGrp" style="display:none" class="fg"><label>Subagente</label>
+        <select id="sia_sub"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div class="fg"><label>Saldo a Favor $</label>
+        <input type="number" id="sia_monto" placeholder="0.00">
+      </div>
+      <div class="fg"><label>Fecha de corte</label>
+        <input type="date" id="sia_fec">
+      </div>
+      <div class="fg"><label>Notas</label>
+        <input id="sia_not" placeholder="Ej: Saldo al cierre 16 abril">
+      </div>
+    </div>
+    <button class="btn bp" onclick="guardarSI_A()">Guardar Saldo A</button>
+  </div>
+
+  <!-- SECCION B: LO QUE ME RESPALDA -->
+
+  <div class="card mb">
+    <div class="ct">Seccion B -- Lo que me Respalda (Base del Flujo)</div>
+    <div class="g2">
+      <div class="fg"><label>Tipo de Activo</label>
+        <select id="sib_tipo" onchange="onSIBTipo()">
+          <option value="proveedor">Proveedor (L5/L6/L7 -- lo que te deben)</option>
+          <option value="efectivo_caja">Efectivo en Caja</option>
+          <option value="efectivo_transito">Efectivo en Transito</option>
+          <option value="cliente_deudor">Cliente que me debe (saldo negativo)</option>
+          <option value="inversion">Inversion / Infraestructura tomada del flujo</option>
+          <option value="otro">Otro activo</option>
+        </select>
+      </div>
+      <div id="sib_provGrp" class="fg"><label>Proveedor</label>
+        <select id="sib_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select>
+      </div>
+      <div id="sib_cliGrp" style="display:none" class="fg"><label>Cliente Deudor</label>
+        <select id="sib_cli"><option value="">-- Seleccionar --</option></select>
+      </div>
+      <div id="sib_descGrp" style="display:none" class="fg"><label>Descripcion</label>
+        <input id="sib_desc" placeholder="Ej: Laptop oficina, Remodelacion, etc.">
+      </div>
+      <div class="fg"><label>Importe $</label>
+        <input type="number" id="sib_monto" placeholder="0.00">
+      </div>
+      <div class="fg"><label>Fecha de corte</label>
+        <input type="date" id="sib_fec">
+      </div>
+      <div class="fg"><label>Notas</label>
+        <input id="sib_not" placeholder="Opcional">
+      </div>
+    </div>
+    <button class="btn bo" onclick="guardarSI_B()">Guardar Activo B</button>
+  </div>
+
+  <!-- TABLA RESUMEN -->
+
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Saldos Iniciales Registrados</div>
+      <button class="btn bg bsm" onclick="renderIniciales()">Actualizar</button>
+    </div>
+    <div class="tw" id="tblIniciales"></div>
+  </div>
+</div>
+
+<!-- BALANCE GENERAL -->
+
+<div id="pg-balance" class="pg">
+  <div class="fb mb">
+    <div class="ct" style="margin:0;font-size:14px">Balance General del Flujo</div>
+    <button class="btn bg bsm" onclick="renderBalance()">Actualizar</button>
+  </div>
+  <div id="balanceCont"></div>
+</div>
+
 </div>
 
 <!-- MODALS -->
@@ -612,7 +765,7 @@ function checkPin() {
 </div></div>
 
 <script>
-var S = {clientes:[],subagentes:[],movimientos:[],salidas:[],efectivos:[]};
+var S = {clientes:[],subagentes:[],movimientos:[],salidas:[],efectivos:[],transferencias:[],saldosIniciales:[],retiros:[]};
 var STORE_KEY = 'fck_v6';
 
 function getStorage() {
@@ -625,9 +778,25 @@ var ST = getStorage();
 function loadS() {
   try {
     var r = ST.getItem(STORE_KEY);
-    if (r) { S = JSON.parse(r); return; }
+    if (r) {
+      var p = JSON.parse(r);
+      S.clientes = p.clientes||[];
+      S.subagentes = p.subagentes||[];
+      S.movimientos = p.movimientos||[];
+      S.salidas = p.salidas||[];
+      S.efectivos = p.efectivos||[];
+      S.transferencias = p.transferencias||[];
+      S.saldosIniciales = p.saldosIniciales||[];
+      S.retiros = p.retiros||[];
+      return;
+    }
     var o = ST.getItem('fck_v5');
-    if (o) { var p=JSON.parse(o); S.clientes=p.clientes||[]; S.subagentes=p.subagentes||[]; S.movimientos=p.movimientos||[]; S.salidas=p.salidas||[]; S.efectivos=p.efectivos||[]; }
+    if (o) {
+      var p=JSON.parse(o);
+      S.clientes=p.clientes||[]; S.subagentes=p.subagentes||[];
+      S.movimientos=p.movimientos||[]; S.salidas=p.salidas||[];
+      S.efectivos=p.efectivos||[]; S.transferencias=[]; S.saldosIniciales=[];
+    }
   } catch(e) {}
 }
 function saveS() { try { ST.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) {} }
@@ -682,24 +851,41 @@ function calcular(imp, pct, tipo, subPct) {
 }
 
 function getSaldoCli(cid) {
-  var e=0,s=0;
+  var e=0,s=0,tr=0,si=0;
   for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) e+=S.movimientos[i].saldoCli;
   for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) s+=S.salidas[i].montoCli;
-  return e-s;
+  for(var i=0;i<S.transferencias.length;i++){
+    var t=S.transferencias[i];
+    if(t.tipoOrig==='cliente'&&t.orig==cid) tr-=t.monto;
+    if(t.tipoDest==='cliente'&&t.dest==cid) tr+=t.monto;
+  }
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var x=S.saldosIniciales[i];
+    if(x.seccion==='A'&&x.tipo==='cliente'&&x.ref==cid) si+=x.monto;
+  }
+  return e-s+tr+si;
 }
 function getSaldoSub(sid) {
   var cids={};
   for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].subId==sid) cids[S.clientes[i].id]=true;
-  var g=0,p=0;
+  var g=0,p=0,si=0;
   for(var i=0;i<S.movimientos.length;i++) if(cids[S.movimientos[i].cid]) g+=S.movimientos[i].comSub;
   for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].saId==sid) p+=S.salidas[i].montoCli;
-  return g-p;
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var x=S.saldosIniciales[i];
+    if(x.seccion==='A'&&x.tipo==='subagente'&&x.ref==sid) si+=x.monto;
+  }
+  return g-p+si;
 }
 function getSaldoProv(prov) {
-  var d=0,s=0;
+  var d=0,s=0,si=0;
   for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) d+=S.movimientos[i].retOfic;
   for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) s+=S.salidas[i].montoTotal;
-  return d-s;
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var x=S.saldosIniciales[i];
+    if(x.seccion==='B'&&x.tipo==='proveedor'&&x.ref===prov) si+=x.monto;
+  }
+  return d-s+si;
 }
 function getCuentas() {
   var rb=0,cb=0,kb=0,rs=0,cs=0,ks=0;
@@ -710,6 +896,22 @@ function getCuentas() {
     if(s.cuentaInt==='rlc') rs+=s.montoCli;
     if(s.cuentaInt==='rec') cs+=s.montoCli;
     if(s.cuentaInt==='ck')  ks+=s.montoCli;
+  }
+  // Transferencias affecting RLC/CK
+  for(var i=0;i<S.transferencias.length;i++){
+    var t=S.transferencias[i];
+    if(t.tipoOrig==='rlc') rb-=t.monto;
+    if(t.tipoDest==='rlc') rb+=t.monto;
+    if(t.tipoOrig==='ck')  kb-=t.monto;
+    if(t.tipoDest==='ck')  kb+=t.monto;
+  }
+  // Saldos iniciales para cuentas internas (Seccion A: RLC y CK)
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var si=S.saldosIniciales[i];
+    if(si.seccion==='A'){
+      if(si.tipo==='rlc') rb+=si.monto;
+      if(si.tipo==='ck')  kb+=si.monto;
+    }
   }
   return {rlc:rb-rs,rec:cb-cs,ck:kb-ks,rlcB:rb,recB:cb,ckB:kb,rlcS:rs,recS:cs,ckS:ks};
 }
@@ -741,6 +943,9 @@ document.getElementById('navBar').addEventListener('click', function(e) {
   if(pg==='cuentas')     renderCuentas();
   if(pg==='estados')     renderECSelects();
   if(pg==='abonos')  { populateAll(); renderAbonos(); document.getElementById('ab_fec').value=today(); }
+  if(pg==='transferencias') { populateAll(); renderTransferencias(); document.getElementById('tr_fec').value=today(); }
+  if(pg==='iniciales') { populateAll(); renderIniciales(); document.getElementById('sia_fec').value=today(); document.getElementById('sib_fec').value=today(); }
+  if(pg==='balance') { renderBalance(); }
   if(pg==='proyeccion') { renderProyeccion(); }
   if(pg==='efectivo')  { document.getElementById('ef_fec').value=today(); document.getElementById('ef_recFec').value=today(); renderEfec(); }
   if(pg==='arqueo')    { document.getElementById('arqueoF').value=today(); renderArqueo(); }
@@ -759,7 +964,7 @@ function populateAll() {
     if(cur) el.value=cur;
   }
   // Selects with "-- Seleccionar --" prefix
-  var ids=['f_cli','s_cli','ecCliSel','ab_cli'];
+  var ids=['f_cli','s_cli','ecCliSel','ab_cli','tr_orig','tr_dest','sia_cli','sib_cli'];
   for(var i=0;i<ids.length;i++){
     var el=document.getElementById(ids[i]);
     if(!el) continue;
@@ -778,7 +983,7 @@ function populateAll() {
   }
   var sOpts='<option value="">-- Seleccionar --</option>';
   for(var i=0;i<S.subagentes.length;i++) sOpts+='<option value="'+S.subagentes[i].id+'">'+S.subagentes[i].nombre+'</option>';
-  var sids=['c_subSel','ecSubSel'];
+  var sids=['c_subSel','ecSubSel','sia_sub'];
   for(var i=0;i<sids.length;i++){
     var el=document.getElementById(sids[i]);
     if(!el) continue;
@@ -880,6 +1085,8 @@ function calcPrev() {
   var cid=parseInt(document.getElementById('f_cli').value);
   var imp=parseFloat(document.getElementById('f_imp').value)||0;
   var trn=parseFloat(document.getElementById('f_trn').value)||0;
+  var tipoEnt=document.getElementById('f_tipoEnt').value;
+  var factura=parseFloat(document.getElementById('f_factura').value)||0;
   var box=document.getElementById('prevBox');
   if(!cid||!imp){box.classList.remove('on');return;}
   var c=null;
@@ -889,22 +1096,19 @@ function calcPrev() {
   var sc=r.retCli-trn;
   var sub=null;
   for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===c.subId){sub=S.subagentes[i];break;}
+  var rows=[];
+  if(tipoEnt==='solocom'&&factura>0) rows.push(['Importe Factura (informativo)',fmt(factura),'t2']);
+  rows.push(['Importe depositado',fmt(imp),'']);
+  rows.push(['Retorno Oficina (.95%)',fmt(r.retOfic),'red']);
+  rows.push(['Retorno Cliente ('+c.com+'%)',fmt(r.retCli),'grn']);
+  if(trn) rows.push(['Transfer incluida','- '+fmt(trn),'org']);
+  if(trn) rows.push(['Saldo neto cliente',fmt(sc),'gld']);
+  rows.push(['RLC (.05%)',fmt(r.rlc),'blu']);
+  rows.push(['Recuperacion (.25%)',fmt(r.rec),'blu']);
+  if(sub) rows.push(['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(r.comSub),'pur']);
+  rows.push(['CK (ganancia)',fmt(r.ck),'gld']);
   var h='';
-  var rows=[
-    ['Importe depositado',fmt(imp),''],
-    ['Retorno Oficina (.95%)',fmt(r.retOfic),'red'],
-    ['Retorno Cliente ('+c.com+'%)',fmt(r.retCli),'grn'],
-    trn?['Transfer incluida','- '+fmt(trn),'org']:null,
-    trn?['Saldo neto cliente',fmt(sc),'gld']:null,
-    ['RLC (.05%)',fmt(r.rlc),'blu'],
-    ['Recuperacion (.25%)',fmt(r.rec),'blu'],
-    sub?['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(r.comSub),'pur']:null,
-    ['CK (ganancia)',fmt(r.ck),'gld']
-  ];
-  for(var i=0;i<rows.length;i++){
-    if(!rows[i]) continue;
-    h+='<div class="pvr"><span class="lb">'+rows[i][0]+'</span><span class="vl '+rows[i][2]+'">'+rows[i][1]+'</span></div>';
-  }
+  for(var i=0;i<rows.length;i++) h+='<div class="pvr"><span class="lb">'+rows[i][0]+'</span><span class="vl '+rows[i][2]+'">'+rows[i][1]+'</span></div>';
   document.getElementById('prevRows').innerHTML=h;
   box.classList.add('on');
 }
@@ -916,17 +1120,26 @@ function guardarOp() {
   var trn=parseFloat(document.getElementById('f_trn').value)||0;
   var fec=document.getElementById('f_fec').value||today();
   var not=document.getElementById('f_not').value.trim();
+  var tipoEnt=document.getElementById('f_tipoEnt').value;
+  var factura=tipoEnt==='solocom'?(parseFloat(document.getElementById('f_factura').value)||0):0;
   if(!tit||!cid||!imp){alert('Titulo, cliente e importe requeridos');return;}
   var c=null;
   for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
   var r=calcular(imp,c.com,c.tipo,c.comSub);
-  S.movimientos.unshift({id:Date.now(),titulo:tit,cid:cid,prov:prov,fecha:fec,notas:not,importe:imp,trans:trn,retOfic:r.retOfic,retCli:r.retCli,saldoCli:r.retCli-trn,rlc:r.rlc,rec:r.rec,comSub:r.comSub,ck:r.ck});
+  S.movimientos.unshift({
+    id:Date.now(),titulo:tit,cid:cid,prov:prov,fecha:fec,notas:not,
+    importe:imp,trans:trn,retOfic:r.retOfic,retCli:r.retCli,
+    saldoCli:r.retCli-trn,rlc:r.rlc,rec:r.rec,comSub:r.comSub,ck:r.ck,
+    soloComision:tipoEnt==='solocom',factura:factura
+  });
   saveS(); resetForm(); alert('Guardado');
 }
 function resetForm() {
-  var flds=['f_tit','f_imp','f_trn','f_not'];
+  var flds=['f_tit','f_imp','f_trn','f_not','f_factura'];
   for(var i=0;i<flds.length;i++) document.getElementById(flds[i]).value='';
   document.getElementById('f_cli').value='';
+  document.getElementById('f_tipoEnt').value='normal';
+  document.getElementById('f_facturaGrp').style.display='none';
   document.getElementById('f_fec').value=today();
   document.getElementById('prevBox').classList.remove('on');
 }
@@ -980,10 +1193,12 @@ function guardarSalida() {
   renderSalidas(); alert('Salida registrada');
 }
 function eliminarSalida(id) {
-  if(!confirm('Eliminar?')) return;
-  var ns=[];
-  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id!==id) ns.push(S.salidas[i]);
-  S.salidas=ns; saveS(); renderSalidas();
+  var s=null; for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id===id){s=S.salidas[i];break;}
+  confirmarEliminar('Salida: '+fmt(s?s.montoCli:0), function(){
+    var ns=[];
+    for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id!==id) ns.push(S.salidas[i]);
+    S.salidas=ns; saveS(); renderSalidas();
+  });
 }
 function editarSal(id) {
   var s=null;
@@ -1156,10 +1371,12 @@ function guardarEditMov(){
   saveS(); cm('moEditMov'); renderMovs(); alert('Actualizado');
 }
 function eliminarMov(id){
-  if(!confirm('Eliminar?')) return;
-  var nm=[];
-  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id!==id) nm.push(S.movimientos[i]);
-  S.movimientos=nm; saveS(); renderMovs();
+  var m=null; for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id===id){m=S.movimientos[i];break;}
+  confirmarEliminar('Entrada: '+(m?m.titulo:''), function(){
+    var nm=[];
+    for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id!==id) nm.push(S.movimientos[i]);
+    S.movimientos=nm; saveS(); renderMovs();
+  });
 }
 
 function renderProveedores(){
@@ -1244,11 +1461,16 @@ function renderEC(){
   if(!cid){el.innerHTML='<div class="empty">Selecciona un cliente</div>';return;}
   var cli=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){cli=S.clientes[i];break;}
   var sub=null; for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===cli.subId){sub=S.subagentes[i];break;}
-  var movs=[],sals=[];
+  var movs=[],sals=[],trns=[];
   for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) movs.push(S.movimientos[i]);
   for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) sals.push(S.salidas[i]);
+  for(var i=0;i<S.transferencias.length;i++){
+    var t=S.transferencias[i];
+    if((t.tipoOrig==='cliente'&&t.orig==cid)||(t.tipoDest==='cliente'&&t.dest==cid)) trns.push(t);
+  }
   movs.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
   sals.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  trns.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
   var sp=getSaldoCli(cid);
   var totDep=0,totRet=0,totSal=0;
   for(var i=0;i<movs.length;i++){totDep+=movs[i].importe;totRet+=movs[i].retCli;}
@@ -1256,18 +1478,21 @@ function renderEC(){
   var evs=[];
   for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'e',d:movs[i]});
   for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:'s',d:sals[i]});
+  for(var i=0;i<trns.length;i++) evs.push({f:trns[i].fecha,t:'tr',d:trns[i]});
   evs.sort(function(a,b){return a.f.localeCompare(b.f);});
-  var h='<div class="ech"><div><div class="ect">'+cli.nombre+'</div><div class="ecm">'+cli.com+'% '+(cli.tipo==='iva'?'antes IVA':'directo')+(sub?' - Sub: '+sub.nombre:'')+' - '+today()+'</div></div><div class="ecs"><div class="ecsl">Saldo a Favor</div><div class="ecsv" style="color:'+(sp>=0?'var(--grn)':'var(--red)')+'">'+fmt(sp)+'</div></div></div>';
+  var h='<div class="ech"><div><div class="ect">'+cli.nombre+'</div><div class="ecm">'+cli.com+'% '+(cli.tipo==='iva'?'antes IVA':cli.tipo==='directo'?'directo':'inverso')+(sub?' - Sub: '+sub.nombre:'')+' - '+today()+'</div></div><div class="ecs"><div class="ecsl">Saldo a Favor</div><div class="ecsv" style="color:'+(sp>=0?'var(--grn)':'var(--red)')+'">'+fmt(sp)+'</div></div></div>';
   h+='<div class="kg" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px"><div class="kpi"><div class="kl">Total Depositado</div><div class="kv">'+fmt(totDep)+'</div></div><div class="kpi"><div class="kl">Total Retorno</div><div class="kv grn">'+fmt(totRet)+'</div></div><div class="kpi"><div class="kl">Total Salidas</div><div class="kv red">'+fmt(totSal)+'</div></div><div class="kpi"><div class="kl">Saldo</div><div class="kv '+(sp>=0?'grn':'red')+'">'+fmt(sp)+'</div></div></div>';
   if(evs.length){
     var acum=0;
-    h+='<div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Cargo/Abono</th><th>Saldo Acum.</th></tr></thead><tbody>';
+    h+='<div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto / Referencia</th><th>Tipo</th><th>Cargo/Abono</th><th>Saldo Acum.</th></tr></thead><tbody>';
     for(var i=0;i<evs.length;i++){
       var ev=evs[i];
       if(ev.t==='e'){
         var m=ev.d; acum+=m.saldoCli;
-        h+='<tr><td>'+m.fecha+'</td><td>'+m.titulo+'</td><td><span class="bdg bin">Entrada</span></td><td style="color:var(--grn)">+'+fmt(m.saldoCli)+'</td><td style="color:var(--acc2)">'+fmt(acum)+'</td></tr>';
-      } else {
+        var eLabel = m.esAbono ? '<span class="bdg be">Abono</span>' : (m.soloComision ? '<span class="bdg bin">Solo Com.</span>' : '<span class="bdg bin">Entrada</span>');
+        var facInfo = (m.soloComision && m.factura) ? '<br><small style="color:var(--t3)">Factura: '+fmt(m.factura)+'</small>' : '';
+        h+='<tr><td>'+m.fecha+'</td><td>'+m.titulo+facInfo+'</td><td>'+eLabel+'</td><td style="color:var(--grn)">+'+fmt(m.saldoCli)+'</td><td style="color:var(--acc2)">'+fmt(acum)+'</td></tr>';
+      } else if(ev.t==='s'){
         var s=ev.d;
         if(s.tipo==='extranjero'&&s.comExtM){
           h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Trans. Extranjero')+'</td><td>'+tBdg('extranjero')+'</td><td style="color:var(--red)">-'+fmt(s.montoTotal)+'</td><td style="color:var(--acc2)">'+fmt(acum-s.montoTotal)+'</td></tr>';
@@ -1277,11 +1502,22 @@ function renderEC(){
           acum-=s.montoCli;
           h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Salida')+'</td><td>'+tBdg(s.tipo)+(s.transito?' [T]':'')+'</td><td style="color:var(--red)">-'+fmt(s.montoCli)+'</td><td style="color:'+(acum>=0?'var(--acc2)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';
         }
+      } else {
+        var t=ev.d;
+        if(t.tipoOrig==='cliente'&&t.orig==cid){
+          acum-=t.monto;
+          var destN = t.tipoDest==='cliente'?(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return '?';})(t.dest):t.tipoDest.toUpperCase();
+          h+='<tr><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+' -> '+destN+'</td><td><span class="bdg bt">Transf.</span></td><td style="color:var(--red)">-'+fmt(t.monto)+'</td><td style="color:'+(acum>=0?'var(--acc2)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';
+        } else {
+          acum+=t.monto;
+          var origN = t.tipoOrig==='cliente'?(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return '?';})(t.orig):t.tipoOrig.toUpperCase();
+          h+='<tr><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+' <- '+origN+'</td><td><span class="bdg be">Recibido</span></td><td style="color:var(--grn)">+'+fmt(t.monto)+'</td><td style="color:var(--acc2)">'+fmt(acum)+'</td></tr>';
+        }
       }
     }
     h+='</tbody></table></div>';
   } else { h+='<div class="empty">Sin movimientos</div>'; }
-  h+='<div class="fe"><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
+  h+='<div class="fe"><button class="btn bg" onclick="generarPDF('+cid+')">Descargar PDF</button><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
   el.innerHTML=h;
 }
 
@@ -1567,26 +1803,565 @@ function ejecutarProyeccion() {
   alert('Salidas registradas. Revisa la pestana Salidas para ajustar detalles.');
 }
 
-function cm(id){document.getElementById(id).classList.remove('on');}
+// TIPO ENTRADA - Solo Comision
+function onTipoEnt() {
+  var t = document.getElementById('f_tipoEnt').value;
+  document.getElementById('f_facturaGrp').style.display = t==='solocom' ? 'flex' : 'none';
+  calcPrev();
+}
 
-document.querySelectorAll('.mo').forEach(function(m){
-  m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('on');});
+// DOUBLE CONFIRM DELETE
+function confirmarEliminar(msg, fn) {
+  if(!confirm('ELIMINAR: ' + msg + '\n\nEsta accion no se puede deshacer.')) return;
+  if(!confirm('CONFIRMAR: Seguro que deseas eliminar?\n\n' + msg)) return;
+  fn();
+}
+
+// FORMATO MONEDA EN INPUTS - convierte numero a formato legible
+function fmtInput(val) {
+  var n = parseFloat(val)||0;
+  return n > 0 ? n.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) : '';
+}
+
+// TRANSFERENCIAS ENTRE SALDOS
+function onTrOrigen() {
+  var t = document.getElementById('tr_tipoOrig').value;
+  document.getElementById('tr_origCliGrp').style.display = t==='cliente' ? 'flex' : 'none';
+  onTrMonto();
+}
+function onTrDest() {
+  var t = document.getElementById('tr_tipoDest').value;
+  document.getElementById('tr_destCliGrp').style.display = t==='cliente' ? 'flex' : 'none';
+  onTrMonto();
+}
+function onTrMonto() {
+  var tipoOrig = document.getElementById('tr_tipoOrig').value;
+  var tipoDest = document.getElementById('tr_tipoDest').value;
+  var monto = parseFloat(document.getElementById('tr_monto').value)||0;
+  var prev = document.getElementById('trPrev');
+  var warn = document.getElementById('trWarn');
+
+  // Show origen saldo
+  var origDisp = document.getElementById('trOrigDisp');
+  var origV = document.getElementById('trOrigV');
+  if(tipoOrig === 'cliente') {
+    var cidOrig = parseInt(document.getElementById('tr_orig').value)||0;
+    if(cidOrig) {
+      var sOrig = getSaldoCli(cidOrig);
+      origDisp.classList.add('on');
+      origV.className = sOrig>=0?'ok':'nok';
+      origV.textContent = fmt(sOrig);
+      if(monto > 0 && monto > sOrig) {
+        warn.style.display='block';
+        warn.textContent = 'El monto supera el saldo del origen (' + fmt(sOrig) + ')';
+      } else { warn.style.display='none'; }
+    }
+  } else {
+    origDisp.classList.remove('on');
+    warn.style.display='none';
+  }
+
+  // Show destino saldo
+  var destDisp = document.getElementById('trDestDisp');
+  var destV = document.getElementById('trDestV');
+  if(tipoDest === 'cliente') {
+    var cidDest = parseInt(document.getElementById('tr_dest').value)||0;
+    if(cidDest) {
+      var sDest = getSaldoCli(cidDest);
+      destDisp.classList.add('on');
+      destV.className = sDest>=0?'ok':'nok';
+      destV.textContent = fmt(sDest);
+    }
+  } else {
+    destDisp.classList.remove('on');
+  }
+
+  // Preview
+  if(monto > 0) {
+    var origLabel = tipoOrig==='cliente' ? (function(){var c=null;var cid=parseInt(document.getElementById('tr_orig').value)||0;for(var i=0;i<S.clientes.length;i++)if(S.clientes[i].id===cid){c=S.clientes[i];break;}return c?c.nombre:'?';})() : tipoOrig.toUpperCase();
+    var destLabel = tipoDest==='cliente' ? (function(){var c=null;var cid=parseInt(document.getElementById('tr_dest').value)||0;for(var i=0;i<S.clientes.length;i++)if(S.clientes[i].id===cid){c=S.clientes[i];break;}return c?c.nombre:'?';})() : tipoDest.toUpperCase();
+    prev.style.display='block';
+    prev.textContent = fmt(monto) + ' de [' + origLabel + '] hacia [' + destLabel + ']';
+  } else {
+    prev.style.display='none';
+  }
+}
+function guardarTransferencia() {
+  var tipoOrig = document.getElementById('tr_tipoOrig').value;
+  var tipoDest = document.getElementById('tr_tipoDest').value;
+  var monto = parseFloat(document.getElementById('tr_monto').value)||0;
+  var ref = document.getElementById('tr_ref').value.trim();
+  var fec = document.getElementById('tr_fec').value||today();
+  var orig = tipoOrig==='cliente' ? (parseInt(document.getElementById('tr_orig').value)||0) : tipoOrig;
+  var dest = tipoDest==='cliente' ? (parseInt(document.getElementById('tr_dest').value)||0) : tipoDest;
+  if(!monto) { alert('Ingresa el monto'); return; }
+  if(tipoOrig==='cliente' && !orig) { alert('Selecciona el cliente origen'); return; }
+  if(tipoDest==='cliente' && !dest) { alert('Selecciona el cliente destino'); return; }
+  if(tipoOrig==='cliente' && orig==dest && tipoDest==='cliente') { alert('Origen y destino no pueden ser el mismo cliente'); return; }
+  if(tipoOrig==='cliente') {
+    var saldo = getSaldoCli(orig);
+    if(monto > saldo && !confirm('El monto supera el saldo (' + fmt(saldo) + '). Continuar?')) return;
+  }
+  S.transferencias.unshift({id:Date.now(), tipoOrig:tipoOrig, orig:orig, tipoDest:tipoDest, dest:dest, monto:monto, ref:ref, fecha:fec});
+  saveS();
+  document.getElementById('tr_monto').value='';
+  document.getElementById('tr_ref').value='';
+  document.getElementById('tr_fec').value=today();
+  document.getElementById('tr_orig').value='';
+  document.getElementById('tr_dest').value='';
+  document.getElementById('trPrev').style.display='none';
+  document.getElementById('trWarn').style.display='none';
+  renderTransferencias(); renderDashboard();
+  alert('Transferencia registrada');
+}
+function eliminarTransferencia(id) {
+  confirmarEliminar('Transferencia de saldo', function(){
+    var nt=[];
+    for(var i=0;i<S.transferencias.length;i++) if(S.transferencias[i].id!==id) nt.push(S.transferencias[i]);
+    S.transferencias=nt; saveS(); renderTransferencias(); renderDashboard();
+  });
+}
+function renderTransferencias() {
+  var el = document.getElementById('tblTransferencias');
+  if(!S.transferencias.length) { el.innerHTML='<div class="empty">Sin transferencias</div>'; return; }
+  var h = '<table><thead><tr><th>Fecha</th><th>Origen</th><th>Destino</th><th>Monto</th><th>Referencia</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<S.transferencias.length;i++) {
+    var t=S.transferencias[i];
+    var origLabel = t.tipoOrig==='cliente' ? (function(cid){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==cid)return S.clientes[j].nombre;return '?';})(t.orig) : t.tipoOrig.toUpperCase();
+    var destLabel = t.tipoDest==='cliente' ? (function(cid){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==cid)return S.clientes[j].nombre;return '?';})(t.dest) : t.tipoDest.toUpperCase();
+    h+='<tr><td>'+t.fecha+'</td><td>'+origLabel+'</td><td>'+destLabel+'</td><td style="color:var(--acc2)">'+fmt(t.monto)+'</td><td style="text-align:left">'+(t.ref||'--')+'</td><td><button class="btn bd bsm" onclick="eliminarTransferencia('+t.id+')">X</button></td></tr>';
+  }
+  el.innerHTML = h + '</tbody></table>';
+}
+
+// SALDOS INICIALES - SECCION A (Lo que debo)
+function onSIATipo() {
+  var t = document.getElementById('sia_tipo').value;
+  document.getElementById('sia_cliGrp').style.display = t==='cliente' ? 'flex' : 'none';
+  document.getElementById('sia_subGrp').style.display = t==='subagente' ? 'flex' : 'none';
+}
+function guardarSI_A() {
+  var tipo = document.getElementById('sia_tipo').value;
+  var monto = parseFloat(document.getElementById('sia_monto').value)||0;
+  var fec = document.getElementById('sia_fec').value||today();
+  var not = document.getElementById('sia_not').value.trim();
+  var ref = tipo;
+  if(tipo==='cliente'){
+    ref = parseInt(document.getElementById('sia_cli').value)||0;
+    if(!ref){alert('Selecciona un cliente');return;}
+  } else if(tipo==='subagente'){
+    ref = parseInt(document.getElementById('sia_sub').value)||0;
+    if(!ref){alert('Selecciona un subagente');return;}
+  }
+  if(!monto){alert('Ingresa el monto');return;}
+  S.saldosIniciales.push({id:Date.now(),seccion:'A',tipo:tipo,ref:ref,monto:monto,fecha:fec,notas:not});
+  saveS();
+  document.getElementById('sia_monto').value='';
+  document.getElementById('sia_not').value='';
+  document.getElementById('sia_cli').value='';
+  document.getElementById('sia_sub').value='';
+  renderIniciales(); renderDashboard();
+  alert('Saldo A guardado');
+}
+
+// SALDOS INICIALES - SECCION B (Lo que me respalda)
+function onSIBTipo() {
+  var t = document.getElementById('sib_tipo').value;
+  document.getElementById('sib_provGrp').style.display = t==='proveedor' ? 'flex' : 'none';
+  document.getElementById('sib_cliGrp').style.display = t==='cliente_deudor' ? 'flex' : 'none';
+  var showDesc = (t==='inversion'||t==='otro');
+  document.getElementById('sib_descGrp').style.display = showDesc ? 'flex' : 'none';
+}
+function guardarSI_B() {
+  var tipo = document.getElementById('sib_tipo').value;
+  var monto = parseFloat(document.getElementById('sib_monto').value)||0;
+  var fec = document.getElementById('sib_fec').value||today();
+  var not = document.getElementById('sib_not').value.trim();
+  var ref = tipo;
+  var desc = '';
+  if(tipo==='proveedor'){
+    ref = document.getElementById('sib_prov').value;
+  } else if(tipo==='cliente_deudor'){
+    ref = parseInt(document.getElementById('sib_cli').value)||0;
+    if(!ref){alert('Selecciona el cliente');return;}
+  } else if(tipo==='inversion'||tipo==='otro'){
+    desc = document.getElementById('sib_desc').value.trim();
+    ref = desc||tipo;
+  }
+  if(!monto){alert('Ingresa el monto');return;}
+  S.saldosIniciales.push({id:Date.now(),seccion:'B',tipo:tipo,ref:ref,desc:desc,monto:monto,fecha:fec,notas:not});
+  saveS();
+  document.getElementById('sib_monto').value='';
+  document.getElementById('sib_not').value='';
+  document.getElementById('sib_desc').value='';
+  renderIniciales(); renderDashboard();
+  alert('Activo B guardado');
+}
+
+function eliminarSaldoInicial(id) {
+  confirmarEliminar('Saldo inicial', function(){
+    var ns=[];
+    for(var i=0;i<S.saldosIniciales.length;i++) if(S.saldosIniciales[i].id!==id) ns.push(S.saldosIniciales[i]);
+    S.saldosIniciales=ns; saveS(); renderIniciales(); renderDashboard();
+  });
+}
+
+function renderIniciales() {
+  var el = document.getElementById('tblIniciales');
+  if(!S.saldosIniciales.length){el.innerHTML='<div class="empty">Sin saldos iniciales registrados</div>';return;}
+  var secA=[], secB=[];
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    if(S.saldosIniciales[i].seccion==='A') secA.push(S.saldosIniciales[i]);
+    else secB.push(S.saldosIniciales[i]);
+  }
+  var h='';
+  if(secA.length){
+    h+='<div style="font-size:11px;font-weight:700;color:var(--grn);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;margin-top:4px">Seccion A -- Lo que Debo</div>';
+    h+='<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Nombre</th><th>Saldo</th><th>Notas</th><th></th></tr></thead><tbody>';
+    var totA=0;
+    for(var i=0;i<secA.length;i++){
+      var x=secA[i]; totA+=x.monto;
+      var nom='';
+      if(x.tipo==='cliente'){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==x.ref){nom=S.clientes[j].nombre;break;}}
+      else if(x.tipo==='subagente'){for(var j=0;j<S.subagentes.length;j++)if(S.subagentes[j].id==x.ref){nom=S.subagentes[j].nombre;break;}}
+      else nom=x.tipo.toUpperCase();
+      h+='<tr><td>'+x.fecha+'</td><td><span class="bdg be">'+x.tipo+'</span></td><td>'+nom+'</td><td style="color:var(--grn)">'+fmt(x.monto)+'</td><td>'+(x.notas||'--')+'</td><td><button class="btn bd bsm" onclick="eliminarSaldoInicial('+x.id+')">X</button></td></tr>';
+    }
+    h+='<tr style="background:var(--s2)"><td colspan="3" style="font-weight:700;color:var(--grn)">TOTAL A</td><td style="color:var(--grn);font-weight:700">'+fmt(totA)+'</td><td></td><td></td></tr>';
+    h+='</tbody></table>';
+  }
+  if(secB.length){
+    h+='<div style="font-size:11px;font-weight:700;color:var(--org);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;margin-top:14px">Seccion B -- Lo que me Respalda</div>';
+    h+='<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Nombre/Descripcion</th><th>Importe</th><th>Notas</th><th></th></tr></thead><tbody>';
+    var totB=0;
+    for(var i=0;i<secB.length;i++){
+      var x=secB[i]; totB+=x.monto;
+      var nom='';
+      if(x.tipo==='proveedor') nom=x.ref;
+      else if(x.tipo==='cliente_deudor'){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==x.ref){nom=S.clientes[j].nombre;break;}}
+      else if(x.tipo==='efectivo_caja') nom='Efectivo en Caja';
+      else if(x.tipo==='efectivo_transito') nom='Efectivo en Transito';
+      else nom=x.desc||x.tipo;
+      h+='<tr><td>'+x.fecha+'</td><td><span class="bdg bl5">'+x.tipo+'</span></td><td>'+nom+'</td><td style="color:var(--org)">'+fmt(x.monto)+'</td><td>'+(x.notas||'--')+'</td><td><button class="btn bd bsm" onclick="eliminarSaldoInicial('+x.id+')">X</button></td></tr>';
+    }
+    h+='<tr style="background:var(--s2)"><td colspan="3" style="font-weight:700;color:var(--org)">TOTAL B</td><td style="color:var(--org);font-weight:700">'+fmt(totB)+'</td><td></td><td></td></tr>';
+    h+='</tbody></table>';
+  }
+  el.innerHTML=h;
+}
+
+// BALANCE GENERAL
+function renderBalance() {
+  var el = document.getElementById('balanceCont');
+  var ct = getCuentas();
+
+  // ======= LADO A: LO QUE DEBO =======
+  var ladoA = [];
+  // Clientes con saldo positivo
+  for(var i=0;i<S.clientes.length;i++){
+    var s=getSaldoCli(S.clientes[i].id);
+    if(s>0) ladoA.push({nom:S.clientes[i].nombre, val:s, tipo:'Cliente'});
+  }
+  // Subagentes con saldo positivo
+  for(var i=0;i<S.subagentes.length;i++){
+    var s=getSaldoSub(S.subagentes[i].id);
+    if(s>0) ladoA.push({nom:S.subagentes[i].nombre, val:s, tipo:'Subagente'});
+  }
+  // RLC y CK
+  if(ct.rlc>0) ladoA.push({nom:'RLC acumulado', val:ct.rlc, tipo:'RLC'});
+  if(ct.ck>0)  ladoA.push({nom:'CK acumulado', val:ct.ck, tipo:'CK'});
+  ladoA.sort(function(a,b){return b.val-a.val;});
+  var totA=0; for(var i=0;i<ladoA.length;i++) totA+=ladoA[i].val;
+
+  // ======= LADO B: LO QUE ME RESPALDA =======
+  var ladoB = [];
+  // Efectivo disponible (recibido)
+  var efDisp=0,efTrn=0;
+  for(var i=0;i<S.efectivos.length;i++){
+    if(S.efectivos[i].estado==='recibido') efDisp+=S.efectivos[i].monto;
+    else efTrn+=S.efectivos[i].monto;
+  }
+  // Efectivo caja de saldos iniciales B
+  var efCajaInit=0, efTrnInit=0;
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var x=S.saldosIniciales[i];
+    if(x.seccion==='B'){
+      if(x.tipo==='efectivo_caja') efCajaInit+=x.monto;
+      if(x.tipo==='efectivo_transito') efTrnInit+=x.monto;
+    }
+  }
+  var totalEfec = efDisp+efCajaInit;
+  var totalTrn  = efTrn+efTrnInit;
+  if(totalEfec>0) ladoB.push({nom:'Efectivo en Caja/Disponible', val:totalEfec, tipo:'Efectivo'});
+  if(totalTrn>0)  ladoB.push({nom:'Efectivo en Transito', val:totalTrn, tipo:'Transito'});
+  // Proveedores (lo que te deben a ti = saldo negativo del proveedor = te han entregado de mas)
+  var provs=['L5','L6','L7'];
+  for(var i=0;i<provs.length;i++){
+    var sp=getSaldoProv(provs[i]);
+    if(sp<0) ladoB.push({nom:'Proveedor '+provs[i]+' (a tu favor)', val:Math.abs(sp), tipo:'Proveedor'});
+    else if(sp>0) ladoB.push({nom:'Proveedor '+provs[i]+' (les debes)', val:-sp, tipo:'Proveedor', negativo:true});
+  }
+  // Clientes deudores (saldo negativo = te deben)
+  for(var i=0;i<S.clientes.length;i++){
+    var sc=getSaldoCli(S.clientes[i].id);
+    if(sc<0) ladoB.push({nom:S.clientes[i].nombre+' (te debe)', val:Math.abs(sc), tipo:'Cli.Deudor'});
+  }
+  // Inversiones/infraestructura del propietario
+  for(var i=0;i<S.saldosIniciales.length;i++){
+    var x=S.saldosIniciales[i];
+    if(x.seccion==='B'&&(x.tipo==='inversion'||x.tipo==='otro')){
+      ladoB.push({nom:x.desc||x.tipo, val:x.monto, tipo:'Inversion'});
+    }
+  }
+  // Retiros del propietario
+  for(var i=0;i<S.retiros.length;i++){
+    ladoB.push({nom:S.retiros[i].concepto, val:S.retiros[i].monto, tipo:'Retiro'});
+  }
+  ladoB.sort(function(a,b){return b.val-a.val;});
+  var totB=0; for(var i=0;i<ladoB.length;i++) totB+=ladoB[i].val;
+  var diff = totA - totB;
+  var cuadra = Math.abs(diff) < 1;
+
+  // ======= RENDER =======
+  var h = '<div class="thr">';
+  // COLUMNA A
+  h += '<div class="card"><div class="ct" style="color:var(--grn)">LADO A -- Lo que Debo</div>';
+  h += '<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Saldo</th></tr></thead><tbody>';
+  for(var i=0;i<ladoA.length;i++){
+    h+='<tr><td>'+ladoA[i].nom+'</td><td><span class="bdg be" style="font-size:9px">'+ladoA[i].tipo+'</span></td><td style="color:var(--grn)">'+fmt(ladoA[i].val)+'</td></tr>';
+  }
+  if(!ladoA.length) h+='<tr><td colspan="3" class="empty">Sin saldos</td></tr>';
+  h+='</tbody></table>';
+  h+='<div class="sep"></div><div class="pvr"><span class="lb" style="font-weight:700">TOTAL A</span><span class="vl grn" style="font-size:18px">'+fmt(totA)+'</span></div>';
+  h+='</div>';
+  // COLUMNA B
+  h += '<div class="card"><div class="ct" style="color:var(--org)">LADO B -- Lo que me Respalda</div>';
+  h += '<table><thead><tr><th>Nombre</th><th>Tipo</th><th>Importe</th></tr></thead><tbody>';
+  for(var i=0;i<ladoB.length;i++){
+    var col = ladoB[i].negativo ? 'var(--red)' : 'var(--org)';
+    h+='<tr><td>'+ladoB[i].nom+'</td><td><span class="bdg bl5" style="font-size:9px">'+ladoB[i].tipo+'</span></td><td style="color:'+col+'">'+fmt(ladoB[i].val)+'</td></tr>';
+  }
+  if(!ladoB.length) h+='<tr><td colspan="3" class="empty">Sin activos</td></tr>';
+  h+='</tbody></table>';
+  h+='<div class="sep"></div><div class="pvr"><span class="lb" style="font-weight:700">TOTAL B</span><span class="vl org" style="font-size:18px">'+fmt(totB)+'</span></div>';
+  h+='</div>';
+  // RESULTADO
+  h += '<div class="card"><div class="ct">Resultado del Balance</div>';
+  if(cuadra){
+    h+='<div class="si sg" style="margin-bottom:12px"><div class="sl">Estado</div><div class="sv" style="color:var(--grn);font-size:16px">CUADRADO</div><div class="ss">A = B, el flujo esta balanceado</div></div>';
+  } else {
+    h+='<div class="si '+(diff>0?'so':'sr')+'" style="margin-bottom:12px"><div class="sl">Estado</div><div class="sv" style="color:'+(diff>0?'var(--org)':'var(--red)')+';font-size:16px">'+(diff>0?'FALTA EN B':'SOBRA EN B')+'</div><div class="ss">Diferencia: '+fmt(Math.abs(diff))+'</div></div>';
+  }
+  h+='<div class="pvr"><span class="lb">Total A (Lo que debo)</span><span class="vl grn">'+fmt(totA)+'</span></div>';
+  h+='<div class="pvr"><span class="lb">Total B (Lo que me respalda)</span><span class="vl org">'+fmt(totB)+'</span></div>';
+  h+='<div class="pvr"><span class="lb">Diferencia A - B</span><span class="vl '+(cuadra?'grn':diff>0?'org':'red')+'">'+fmt(diff)+'</span></div>';
+  h+='<div class="sep"></div>';
+  // Retiro del propietario
+  h+='<div class="ct" style="margin-top:8px">Retiro/Proyecto Propietario</div>';
+  h+='<div class="fg"><label>Concepto</label><input id="ret_con" placeholder="Ej: Laptop, Remodelacion..."></div>';
+  h+='<div class="fg"><label>Monto $</label><input type="number" id="ret_mnt" placeholder="0.00"></div>';
+  h+='<div class="fg"><label>Fecha</label><input type="date" id="ret_fec" value="'+today()+'"></div>';
+  h+='<button class="btn bo" style="width:100%;margin-top:6px" onclick="guardarRetiro()">Registrar Retiro/Proyecto</button>';
+  if(S.retiros.length){
+    h+='<div class="sep"></div><div class="ct">Retiros Registrados</div>';
+    for(var i=0;i<S.retiros.length;i++){
+      var r=S.retiros[i];
+      h+='<div class="pvr"><span class="lb">'+r.fecha+' -- '+r.concepto+'</span><span class="vl org">'+fmt(r.monto)+'</span></div>';
+    }
+  }
+  h+='</div>';
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+function guardarRetiro(){
+  var con=document.getElementById('ret_con').value.trim();
+  var mnt=parseFloat(document.getElementById('ret_mnt').value)||0;
+  var fec=document.getElementById('ret_fec').value||today();
+  if(!con||!mnt){alert('Concepto y monto requeridos');return;}
+  S.retiros.push({id:Date.now(),concepto:con,monto:mnt,fecha:fec});
+  saveS(); renderBalance();
+  alert('Retiro registrado');
+}
+
+// Old guardarSaldoInicial kept for backward compatibility (does nothing now)
+function guardarSaldoInicial(tipo){}
+
+
+// PDF ESTADO DE CUENTA CLIENTE
+function generarPDF(cid) {
+  var cli=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){cli=S.clientes[i];break;}
+  var sub=null; if(cli) for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===cli.subId){sub=S.subagentes[i];break;}
+  var movs=[],sals=[],trns=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) sals.push(S.salidas[i]);
+  for(var i=0;i<S.transferencias.length;i++){
+    var t=S.transferencias[i];
+    if((t.tipoOrig==='cliente'&&t.orig==cid)||(t.tipoDest==='cliente'&&t.dest==cid)) trns.push(t);
+  }
+  var sp = getSaldoCli(cid);
+  var totDep=0,totRet=0,totSal=0;
+  for(var i=0;i<movs.length;i++){totDep+=movs[i].importe;totRet+=movs[i].retCli;}
+  for(var i=0;i<sals.length;i++) totSal+=sals[i].montoCli;
+  var fmtN = function(n){return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0);};
+  // Build events timeline
+  var evs=[];
+  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'e',d:movs[i]});
+  for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:'s',d:sals[i]});
+  for(var i=0;i<trns.length;i++) evs.push({f:trns[i].fecha,t:'tr',d:trns[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var acum=0, rows='';
+  for(var i=0;i<evs.length;i++){
+    var ev=evs[i];
+    if(ev.t==='e'){
+      var m=ev.d; acum+=m.saldoCli;
+      var esTipo = m.esAbono ? 'Abono Efectivo' : (m.soloComision ? 'Solo Comision' : 'Entrada');
+      var refTxt = m.titulo||'';
+      rows+='<tr class="re"><td>'+m.fecha+'</td><td>'+refTxt+(m.factura?'<br><small style="color:#999">Factura: '+fmtN(m.factura)+'</small>':'')+'</td><td>'+esTipo+'</td><td style="text-align:right;color:#2d7a52;font-weight:600">+'+fmtN(m.saldoCli)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum)+'</td></tr>';
+    } else if(ev.t==='s'){
+      var s=ev.d;
+      if(s.tipo==='extranjero'&&s.comExtM){
+        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>'+(s.ref||'Trans. Extranjero')+'</td><td>Trans. Extran.</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.montoTotal)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum-s.montoTotal)+'</td></tr>';
+        acum-=s.montoCli;
+        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>Comision Extranjero ('+s.comExt+'%)</td><td>Com. Extran.</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.comExtM)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
+      } else {
+        acum-=s.montoCli;
+        var tp = s.tipo==='transferencia'?'Transferencia':s.tipo==='efectivo'?(s.transito?'Efec. Transito':'Efectivo'):'Extranjero';
+        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>'+(s.ref||'Salida')+'</td><td>'+tp+'</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.montoCli)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
+      }
+    } else {
+      var t=ev.d;
+      if(t.tipoOrig==='cliente'&&t.orig==cid){
+        acum-=t.monto;
+        rows+='<tr class="rs"><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+'</td><td>Transf. a '+(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return t.tipoDest.toUpperCase();})(t.dest)+'</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(t.monto)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
+      } else {
+        acum+=t.monto;
+        rows+='<tr class="re"><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+'</td><td>Recibido de '+(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return t.tipoOrig.toUpperCase();})(t.orig)+'</td><td style="text-align:right;color:#2d7a52;font-weight:600">+'+fmtN(t.monto)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum)+'</td></tr>';
+      }
+    }
+  }
+  var sc = sp>=0?'#2d7a52':'#c0392b';
+  var docID = 'EC-'+String(cid).slice(-4)+'-'+today().replace(/-/g,'');
+  var css = '*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;background:#fff;padding:20px}'+
+    '.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:3px solid #1a4a8a;margin-bottom:14px}'+
+    '.hdr-left{display:flex;align-items:center;gap:14px}.brand{font-size:18pt;font-weight:800;color:#111}.brand span{color:#c9a84c}'+
+    '.hdr-r{text-align:right}.did{font-size:9pt;font-weight:700;color:#1a4a8a}.ddate{font-size:8pt;color:#888;margin-top:2px}'+
+    'h1{font-size:18pt;font-weight:700;color:#111}.sub{font-size:8pt;color:#888;margin-top:2px}'+
+    '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}'+
+    '.kpi{border:1px solid #ddd;border-radius:5px;padding:8px 10px;background:#fafafa}'+
+    '.kl{font-size:7pt;text-transform:uppercase;letter-spacing:.05em;color:#aaa;margin-bottom:3px}.kv{font-size:10pt;font-weight:700}'+
+    '.st{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a4a8a;margin-bottom:5px;margin-top:12px}'+
+    'table{width:100%;border-collapse:collapse;font-size:8.5pt}thead tr{background:#1a4a8a;color:#fff}'+
+    'th{padding:6px 7px;text-align:left;font-size:7.5pt}tbody tr{border-bottom:1px solid #f0f0f0}tbody tr:nth-child(even){background:#fafafa}'+
+    'td{padding:5px 7px}.re td:first-child{border-left:3px solid #4caf82}.rs td:first-child{border-left:3px solid #e05c5c}'+
+    '.fbox{margin-top:14px;border:2px solid #1a4a8a;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#f0f5ff}'+
+    '.fl{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888}'+
+    '.fl small{display:block;font-weight:400;font-size:7pt;margin-top:2px;color:#bbb;text-transform:none;letter-spacing:0}'+
+    '.fa{font-size:18pt;font-weight:700}.pgf{margin-top:10px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:7pt;color:#bbb}'+
+    '@media print{body{padding:0}@page{size:A4;margin:12mm 14mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  var body = '<div class="hdr"><div class="hdr-left"><div><div class="brand">Luis Corpo <span>Connect</span></div></div><div style="border-left:1px solid #ddd;padding-left:14px;margin-left:4px"><h1>'+cli.nombre+'</h1><div class="sub">'+cli.com+'% '+(cli.tipo==='iva'?'antes IVA':cli.tipo==='directo'?'directo':'inverso')+(sub?' - Sub: '+sub.nombre:'')+'</div></div></div><div class="hdr-r"><div class="did">'+docID+'</div><div class="ddate">Estado de cuenta al '+today()+'</div></div></div>'+
+    '<div class="kpis"><div class="kpi"><div class="kl">Total Depositado</div><div class="kv" style="color:#333">'+fmtN(totDep)+'</div></div><div class="kpi"><div class="kl">Total Retorno</div><div class="kv" style="color:#2d7a52">'+fmtN(totRet)+'</div></div><div class="kpi"><div class="kl">Total Salidas</div><div class="kv" style="color:#c0392b">'+fmtN(totSal)+'</div></div><div class="kpi"><div class="kl">Saldo Pendiente</div><div class="kv" style="color:'+sc+'">'+fmtN(sp)+'</div></div></div>'+
+    '<div class="st">Movimientos</div>'+
+    '<table><thead><tr><th style="width:68px">Fecha</th><th>Concepto / Referencia</th><th style="width:100px">Tipo</th><th style="width:100px;text-align:right">Cargo/Abono</th><th style="width:100px;text-align:right">Saldo Acum.</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="fbox"><div class="fl">Saldo pendiente a favor<small>Generado el '+today()+' - Luis Corpo Connect - Confidencial</small></div><div class="fa" style="color:'+sc+'">'+fmtN(sp)+'</div></div>'+
+    '<div class="pgf"><span>Luis Corpo Connect - '+cli.nombre+' - '+docID+'</span><span>Confidencial</span></div>';
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>EC '+cli.nombre+'</title><style>'+css+'</style></head><body>'+body+'</body></html>';
+
+var enc = ‘data:text/html;charset=utf-8,’ + encodeURIComponent(html);
+var a = document.createElement(‘a’);
+a.href=enc; a.download=‘EC_’+cli.nombre.replace(/\s+/g,’*’)+’*’+today()+’.html’;
+a.style.display=‘none’; document.body.appendChild(a); a.click();
+setTimeout(function(){document.body.removeChild(a);},100);
+}
+
+// PDF PROVEEDOR
+function generarPDFProv(prov) {
+var fmtN=function(n){return new Intl.NumberFormat(‘es-MX’,{style:‘currency’,currency:‘MXN’}).format(n||0);};
+var ents=[],sals=[];
+for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) ents.push(S.movimientos[i]);
+for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) sals.push(S.salidas[i]);
+ents.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+sals.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+var evs=[];
+for(var i=0;i<ents.length;i++) evs.push({f:ents[i].fecha,t:‘e’,d:ents[i]});
+for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:‘s’,d:sals[i]});
+evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+var saldo=getSaldoProv(prov);
+var totEnt=ents.reduce(function(a,m){return a+m.retOfic;},0);
+var totSal=sals.reduce(function(a,s){return a+s.montoTotal;},0);
+var acum=0,rows=’’;
+// Add saldo inicial if exists
+for(var i=0;i<S.saldosIniciales.length;i++){
+var si=S.saldosIniciales[i];
+if(si.tipo===‘proveedor’&&si.ref===prov){
+acum+=si.monto;
+rows+=’<tr class="re"><td>’+si.fecha+’</td><td>Saldo Inicial</td><td>Inicial</td><td style="text-align:right;color:#c0392b;font-weight:600">+’+fmtN(si.monto)+’</td><td style="text-align:right;color:#8a6e00;font-weight:600">’+fmtN(acum)+’</td></tr>’;
+}
+}
+for(var i=0;i<evs.length;i++){
+var ev=evs[i];
+if(ev.t===‘e’){
+var m=ev.d; acum+=m.retOfic;
+var c=null; for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}
+rows+=’<tr class="re"><td>’+m.fecha+’</td><td>’+m.titulo+(c?’ - ‘+c.nombre:’’)+’</td><td>Entrada</td><td style="text-align:right;color:#c0392b;font-weight:600">+’+fmtN(m.retOfic)+’</td><td style="text-align:right;color:'+(acum>0?'#c0392b':'#2d7a52')+';font-weight:600">’+fmtN(acum)+’</td></tr>’;
+} else {
+var s=ev.d; acum-=s.montoTotal;
+var c2=null; for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===s.cid){c2=S.clientes[j];break;}
+var tp=s.tipo===‘transferencia’?‘Transferencia’:s.tipo===‘efectivo’?‘Efectivo’:‘Extranjero’;
+rows+=’<tr class="rs"><td>’+s.fecha+’</td><td>’+(s.ref||‘Entrega’)+(c2?’ - ‘+c2.nombre:’’)+’</td><td>’+tp+’</td><td style="text-align:right;color:#2d7a52;font-weight:600">-’+fmtN(s.montoTotal)+’</td><td style="text-align:right;color:'+(acum<=0?'#2d7a52':'#c0392b')+';font-weight:600">’+fmtN(acum)+’</td></tr>’;
+}
+}
+var sc=saldo<=0?’#2d7a52’:’#c0392b’;
+var docID=‘EC-’+prov+’-’+today().replace(/-/g,’’);
+var css=’*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;background:#fff;padding:20px}’+
+‘.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:3px solid #1a4a8a;margin-bottom:14px}’+
+‘.brand{font-size:16pt;font-weight:800;color:#111}.brand span{color:#c9a84c}’+
+‘h1{font-size:18pt;font-weight:700;color:#1a4a8a}.hdr-r{text-align:right}.did{font-size:9pt;font-weight:700;color:#1a4a8a}.ddate{font-size:8pt;color:#888;margin-top:2px}’+
+‘.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}’+
+‘.kpi{border:1px solid #ddd;border-radius:5px;padding:8px 10px;background:#fafafa}’+
+‘.kl{font-size:7pt;text-transform:uppercase;letter-spacing:.05em;color:#aaa;margin-bottom:3px}.kv{font-size:10pt;font-weight:700}’+
+‘.st{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a4a8a;margin-bottom:5px}’+
+‘table{width:100%;border-collapse:collapse;font-size:8.5pt}thead tr{background:#1a4a8a;color:#fff}’+
+‘th{padding:6px 7px;text-align:left;font-size:7.5pt}tbody tr{border-bottom:1px solid #f0f0f0}tbody tr:nth-child(even){background:#fafafa}’+
+‘td{padding:5px 7px}.re td:first-child{border-left:3px solid #e05c5c}.rs td:first-child{border-left:3px solid #4caf82}’+
+‘.fbox{margin-top:14px;border:2px solid #1a4a8a;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#f0f5ff}’+
+‘.fl{font-size:8pt;font-weight:700;text-transform:uppercase;color:#888}.fl small{display:block;font-weight:400;font-size:7pt;margin-top:2px;color:#bbb;text-transform:none}’+
+‘.fa{font-size:18pt;font-weight:700}.pgf{margin-top:10px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:7pt;color:#bbb}’+
+‘@media print{body{padding:0}@page{size:A4;margin:12mm 14mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}’;
+var body=’<div class="hdr"><div><div class="brand">Luis Corpo <span>Connect</span></div><h1>Proveedor ‘+prov+’</h1></div><div class="hdr-r"><div class="did">’+docID+’</div><div class="ddate">Estado de cuenta al ‘+today()+’</div></div></div>’+
+‘<div class="kpis"><div class="kpi"><div class="kl">Total Cargado</div><div class="kv" style="color:#c0392b">’+fmtN(totEnt)+’</div></div><div class="kpi"><div class="kl">Total Entregado</div><div class="kv" style="color:#2d7a52">’+fmtN(totSal)+’</div></div><div class="kpi"><div class="kl">Saldo Neto</div><div class="kv" style="color:'+sc+'">’+fmtN(saldo)+’</div></div></div>’+
+‘<div class="st">Movimientos</div>’+
+‘<table><thead><tr><th style="width:68px">Fecha</th><th>Concepto</th><th style="width:100px">Tipo</th><th style="width:100px;text-align:right">Debe/Haber</th><th style="width:100px;text-align:right">Saldo Acum.</th></tr></thead><tbody>’+rows+’</tbody></table>’+
+‘<div class="fbox"><div class="fl">Saldo neto con proveedor ‘+prov+’<small>Generado el ‘+today()+’ - Luis Corpo Connect</small></div><div class="fa" style="color:'+sc+'">’+fmtN(saldo)+’</div></div>’+
+‘<div class="pgf"><span>Luis Corpo Connect - Proveedor ‘+prov+’ - ‘+docID+’</span><span>Confidencial</span></div>’;
+var html=’<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>EC Proveedor ‘+prov+’</title><style>’+css+’</style></head><body>’+body+’</body></html>’;
+var enc=‘data:text/html;charset=utf-8,’+encodeURIComponent(html);
+var a=document.createElement(‘a’);
+a.href=enc; a.download=‘EC_Proveedor_’+prov+’_’+today()+’.html’;
+a.style.display=‘none’; document.body.appendChild(a); a.click();
+setTimeout(function(){document.body.removeChild(a);},100);
+}
+
+function cm(id){document.getElementById(id).classList.remove(‘on’);}
+
+document.querySelectorAll(’.mo’).forEach(function(m){
+m.addEventListener(‘click’,function(e){if(e.target===m)m.classList.remove(‘on’);});
 });
 
 (function init(){
-  try {
-    loadS();
-    var now=new Date();
-    document.getElementById('dateBadge').textContent=now.toLocaleDateString('es-MX',{weekday:'short',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
-    document.getElementById('f_fec').value=today();
-    document.getElementById('s_fec').value=today();
-    document.getElementById('arqueoF').value=today();
-    document.getElementById('ef_fec').value=today();
-    document.getElementById('ef_recFec').value=today();
-    var abfec=document.getElementById('ab_fec'); if(abfec) abfec.value=today();
-    populateAll();
-    renderDashboard();
-  } catch(e) { alert('Error al iniciar: '+e.message); }
+try {
+loadS();
+var now=new Date();
+document.getElementById(‘dateBadge’).textContent=now.toLocaleDateString(‘es-MX’,{weekday:‘short’,year:‘numeric’,month:‘short’,day:‘numeric’}).toUpperCase();
+document.getElementById(‘f_fec’).value=today();
+document.getElementById(‘s_fec’).value=today();
+document.getElementById(‘arqueoF’).value=today();
+document.getElementById(‘ef_fec’).value=today();
+document.getElementById(‘ef_recFec’).value=today();
+var abfec=document.getElementById(‘ab_fec’); if(abfec) abfec.value=today();
+populateAll();
+renderDashboard();
+} catch(e) { alert(’Error al iniciar: ’+e.message); }
 })();
 </script>
 
