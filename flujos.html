@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlujoCK - Luis Corpo Connect</title>
+<style>
+:root{
+  --bg:#0e0e0f;--sur:#161618;--s2:#1e1e21;--bdr:#2a2a2e;
+  --acc:#c9a84c;--acc2:#e8c96d;
+  --txt:#f0ede8;--t2:#9e9b96;--t3:#5a5855;
+  --grn:#4caf82;--red:#e05c5c;--blu:#5b8dee;--org:#e09a3a;--pur:#a67be8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:Arial,sans-serif;min-height:100vh;font-size:14px}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bdr);background:var(--sur);position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:800;color:var(--txt)}.logo span{color:var(--acc)}
+.dbadge{font-size:11px;color:var(--t2);background:var(--s2);border:1px solid var(--bdr);padding:4px 10px;border-radius:4px}
+nav{display:flex;padding:10px 20px 0;border-bottom:1px solid var(--bdr);background:var(--sur);overflow-x:auto;gap:2px}
+nav::-webkit-scrollbar{display:none}
+.tab{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3);transition:all .2s;flex-shrink:0}
+.tab:hover{color:var(--t2)}.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.main{padding:18px 20px;max-width:1500px;margin:0 auto}
+.pg{display:none}.pg.on{display:block}
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:12px}
+.ct{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ct::before{content:'';width:3px;height:12px;background:var(--acc);border-radius:2px}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:12px}
+.kl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.kv{font-size:16px;font-weight:700;color:var(--txt)}
+.kv.gld{color:var(--acc2)}.kv.grn{color:var(--grn)}.kv.blu{color:var(--blu)}.kv.red{color:var(--red)}.kv.org{color:var(--org)}.kv.pur{color:var(--pur)}
+.sem{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.si{border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;border-left:4px solid transparent}
+.sg{background:rgba(76,175,130,.08);border-color:var(--grn)}
+.so{background:rgba(224,154,58,.08);border-color:var(--org)}
+.sr{background:rgba(224,92,92,.08);border-color:var(--red)}
+.sl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.sv{font-size:19px;font-weight:700}
+.ss{font-size:10px;color:var(--t3);margin-top:2px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+input,select{background:var(--s2);border:1px solid var(--bdr);color:var(--txt);padding:9px 11px;border-radius:5px;font-size:13px;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--acc)}
+select option{background:var(--s2)}
+.btn{font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:9px 18px;border-radius:5px;cursor:pointer;border:none}
+.bp{background:var(--acc);color:#0e0e0f}.bp:hover{background:var(--acc2)}
+.bg{background:transparent;color:var(--t2);border:1px solid var(--bdr)}.bg:hover{border-color:var(--acc);color:var(--acc)}
+.bd{background:transparent;color:var(--red);border:1px solid var(--red)}.bd:hover{background:var(--red);color:#fff}
+.bo{background:var(--org);color:#0e0e0f}
+.bsm{padding:4px 10px;font-size:10px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:2px solid var(--bdr)}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:8px 9px;text-align:right;white-space:nowrap}
+th:first-child,th:nth-child(2){text-align:left}
+td{padding:9px 9px;border-bottom:1px solid var(--bdr);font-size:12px;text-align:right;color:var(--t2)}
+td:first-child,td:nth-child(2){text-align:left;color:var(--txt)}
+tr:hover td{background:var(--s2)}
+.pvb{background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:14px;margin-top:12px;display:none}
+.pvb.on{display:block}
+.pvr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.pvr:last-child{border:none}
+.pvr .lb{color:var(--t3);font-size:11px}
+.pvr .vl{font-weight:600}
+.vl.gld{color:var(--acc2)}.vl.grn{color:var(--grn)}.vl.blu{color:var(--blu)}.vl.red{color:var(--red)}.vl.org{color:var(--org)}.vl.pur{color:var(--pur)}
+.bdg{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px}
+.bt{background:rgba(91,141,238,.15);color:var(--blu);border:1px solid rgba(91,141,238,.3)}
+.be{background:rgba(76,175,130,.15);color:var(--grn);border:1px solid rgba(76,175,130,.3)}
+.bin{background:rgba(201,168,76,.15);color:var(--acc2);border:1px solid rgba(201,168,76,.3)}
+.bxt{background:rgba(166,123,232,.15);color:var(--pur);border:1px solid rgba(166,123,232,.3)}
+.bl5{background:rgba(224,154,58,.12);color:var(--org);border:1px solid rgba(224,154,58,.3)}
+.bl6{background:rgba(76,175,130,.12);color:var(--grn);border:1px solid rgba(76,175,130,.3)}
+.bl7{background:rgba(91,141,238,.12);color:var(--blu);border:1px solid rgba(91,141,238,.3)}
+.sdsp{background:var(--s2);border:1px solid var(--bdr);border-radius:5px;padding:8px 11px;font-size:12px;display:none;margin-top:6px}
+.sdsp.on{display:block}
+.ok{color:var(--grn);font-weight:600}.nok{color:var(--red);font-weight:600}
+.al{padding:10px 13px;border-radius:5px;font-size:12px;margin-bottom:10px}
+.ai{background:rgba(91,141,238,.1);border:1px solid rgba(91,141,238,.3);color:var(--blu)}
+.aw{background:rgba(224,154,58,.1);border:1px solid rgba(224,154,58,.3);color:var(--org)}
+.ech{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.ect{font-weight:800;font-size:22px;letter-spacing:-0.5px}
+.ecm{font-size:11px;color:var(--t2);margin-top:4px}
+.ecs{background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:12px 16px;text-align:right}
+.ecsl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.ecsv{font-size:20px;font-weight:700;margin-top:4px}
+.ectxt{background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:12px;font-size:11px;color:var(--t2);white-space:pre;overflow-x:auto;line-height:1.8;margin-top:12px;font-family:monospace}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center}
+.mo.on{display:flex}
+.md{background:var(--sur);border:1px solid var(--bdr);border-radius:10px;padding:20px;width:92%;max-width:580px;max-height:92vh;overflow-y:auto}
+.mdt{font-size:16px;font-weight:700;margin-bottom:14px}
+.sep{height:1px;background:var(--bdr);margin:10px 0}
+.fb{display:flex;justify-content:space-between;align-items:center}
+.fe{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.fs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mb{margin-bottom:10px}
+.empty{text-align:center;padding:32px;color:var(--t3);font-size:12px}
+.tc{display:grid;grid-template-columns:320px 1fr;gap:12px}
+.thr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.pL5 td:first-child{border-left:2px solid var(--org)}
+.pL6 td:first-child{border-left:2px solid var(--grn)}
+.pL7 td:first-child{border-left:2px solid var(--blu)}
+.efcard{background:var(--s2);border:1px solid var(--bdr);border-radius:6px;padding:11px;margin-bottom:8px}
+.trnrow{background:rgba(76,175,130,.04)}
+.warn-box{background:rgba(224,154,58,.08);border:1px solid rgba(224,154,58,.25);border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--org)}
+@media(max-width:800px){
+  header,nav,.main{padding-left:14px;padding-right:14px}
+  .g2{grid-template-columns:1fr}.kg{grid-template-columns:repeat(2,1fr)}
+  .tc,.thr{grid-template-columns:1fr!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Luis Corpo <span>Connect</span></div>
+  <div class="dbadge" id="dateBadge"></div>
+</header>
+
+<nav id="navBar">
+  <div class="tab on"  data-pg="dashboard">Dashboard</div>
+  <div class="tab" data-pg="captura">Nueva Entrada</div>
+  <div class="tab" data-pg="salidas">Salidas</div>
+  <div class="tab" data-pg="efectivo">Efectivo</div>
+  <div class="tab" data-pg="abonos">Abonos Clientes</div>
+  <div class="tab" data-pg="movimientos">Movimientos</div>
+  <div class="tab" data-pg="clientes">Clientes</div>
+  <div class="tab" data-pg="subagentes">Subagentes</div>
+  <div class="tab" data-pg="proveedores">Proveedores</div>
+  <div class="tab" data-pg="cuentas">Cuentas Internas</div>
+  <div class="tab" data-pg="estados">Estados de Cuenta</div>
+  <div class="tab" data-pg="arqueo">Arqueo del Dia</div>
+  <div class="tab" data-pg="proyeccion">Proyeccion</div>
+</nav>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+
+<div id="pg-dashboard" class="pg on">
+  <div class="card mb">
+    <div class="ct">Semaforo de Liquidez</div>
+    <div class="sem" id="semaforo"></div>
+  </div>
+  <div class="kg" id="kpiGrid"></div>
+  <div class="thr">
+    <div class="card"><div class="ct">Ultimas Entradas</div><div id="dMovs"></div></div>
+    <div class="card"><div class="ct">Saldos Clientes</div><div id="dSaldos"></div></div>
+    <div class="card"><div class="ct">Cuentas Internas</div><div id="dInternas"></div></div>
+  </div>
+  <div class="thr">
+    <div class="card"><div class="ct">Proveedores</div><div id="dProv"></div></div>
+    <div class="card"><div class="ct">Subagentes</div><div id="dSub"></div></div>
+    <div class="card"><div class="ct">Ultimas Salidas</div><div id="dSal"></div></div>
+  </div>
+</div>
+
+<!-- NUEVA ENTRADA -->
+
+<div id="pg-captura" class="pg">
+  <div class="card">
+    <div class="ct">Registrar Entrada</div>
+    <div class="g2">
+      <div class="fg"><label>Titulo</label><input id="f_tit" placeholder="Ej: Pago semana 21"></div>
+      <div class="fg"><label>Cliente</label><select id="f_cli" onchange="calcPrev()"><option value="">-- Seleccionar --</option></select></div>
+      <div class="fg"><label>Proveedor</label>
+        <select id="f_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select></div>
+      <div class="fg"><label>Importe Depositado $</label><input type="number" id="f_imp" placeholder="0.00" oninput="calcPrev()"></div>
+      <div class="fg"><label>Transferencia incluida $</label><input type="number" id="f_trn" placeholder="0.00" oninput="calcPrev()"></div>
+      <div class="fg"><label>Fecha</label><input type="date" id="f_fec"></div>
+      <div class="fg"><label>Notas</label><input id="f_not" placeholder="Opcional"></div>
+    </div>
+    <div class="pvb" id="prevBox">
+      <div class="ct" style="margin-bottom:10px">Vista previa</div>
+      <div id="prevRows"></div>
+      <div class="fe">
+        <button class="btn bg" onclick="resetForm()">Limpiar</button>
+        <button class="btn bp" onclick="guardarOp()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SALIDAS -->
+
+<div id="pg-salidas" class="pg">
+  <div class="tc">
+    <div class="card">
+      <div class="ct">Registrar Salida</div>
+      <div class="fg"><label>Cliente</label>
+        <select id="s_cli" onchange="onSC()"><option value="">-- Seleccionar --</option></select>
+        <div class="sdsp" id="sDisp">Saldo: <span id="sDispV"></span></div>
+      </div>
+      <div class="fg"><label>Tipo de Salida</label>
+        <select id="s_tipo" onchange="onSTipo()">
+          <option value="transferencia">Transferencia nacional</option>
+          <option value="efectivo">Efectivo</option>
+          <option value="extranjero">Transferencia extranjero</option>
+        </select>
+      </div>
+      <div id="s_extG" style="display:none">
+        <div class="fg"><label>Comision extranjero % (opcional)</label>
+          <input type="number" id="s_comExt" placeholder="0.00" step="0.01" oninput="onSC()"></div>
+        <div id="s_extPrev" class="al ai" style="display:none"></div>
+      </div>
+      <div id="s_trnG" style="display:none" class="fg">
+        <label style="flex-direction:row;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12px">
+          <input type="checkbox" id="s_trn" style="width:auto"> Efectivo en transito (aun no llega)
+        </label>
+      </div>
+      <div class="fg"><label>Proveedor que entrega</label>
+        <select id="s_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select>
+      </div>
+      <div class="fg"><label>Monto a entregar $</label><input type="number" id="s_mnt" placeholder="0.00" oninput="onSC()"></div>
+      <div class="fg"><label>Referencia</label><input id="s_ref" placeholder="Ej: SPEI BBVA..."></div>
+      <div class="fg"><label>Fecha</label><input type="date" id="s_fec"></div>
+      <div class="fg"><label>Notas</label><input id="s_not" placeholder="Opcional"></div>
+      <div id="sWarn" class="al aw" style="display:none"></div>
+      <button class="btn bo" style="width:100%" onclick="guardarSalida()">Registrar Salida</button>
+    </div>
+    <div class="card">
+      <div class="fb mb">
+        <div class="ct" style="margin:0">Historial de Salidas</div>
+        <div class="fs">
+          <select id="fSCli" onchange="renderSalidas()" style="width:130px"><option value="">Todos</option></select>
+          <select id="fSTipo" onchange="renderSalidas()">
+            <option value="">Todos tipos</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="extranjero">Extranjero</option>
+          </select>
+        </div>
+      </div>
+      <div class="tw" id="tblSal"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EFECTIVO -->
+
+<div id="pg-efectivo" class="pg">
+  <div class="thr">
+    <div class="card">
+      <div class="ct">Solicitar Efectivo</div>
+      <div class="fg"><label>Proveedor</label>
+        <select id="ef_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select></div>
+      <div class="fg"><label>Monto Solicitado $</label><input type="number" id="ef_mnt" placeholder="0.00"></div>
+      <div class="fg"><label>Referencia</label><input id="ef_ref" placeholder="Ej: Solicitud semana 21"></div>
+      <div class="fg"><label>Fecha</label><input type="date" id="ef_fec"></div>
+      <div class="fg"><label>Notas</label><input id="ef_not" placeholder="Opcional"></div>
+      <button class="btn bo" style="width:100%" onclick="solicitarEfec()">Registrar Solicitud</button>
+    </div>
+    <div class="card">
+      <div class="ct">En Transito <span id="efTrnCnt" style="color:var(--org);font-size:11px"></span></div>
+      <div id="efTrnList"><div class="empty">Sin solicitudes en transito</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Confirmar Recepcion</div>
+      <div class="fg"><label>Solicitud a confirmar</label>
+        <select id="ef_recSel"><option value="">-- Seleccionar --</option></select></div>
+      <div class="fg"><label>Fecha Recepcion</label><input type="date" id="ef_recFec"></div>
+      <div class="fg"><label>Notas</label><input id="ef_recNot" placeholder="Opcional"></div>
+      <button class="btn bp" style="width:100%" onclick="recibirEfec()">Confirmar Recepcion</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Historial de Efectivo</div>
+      <div class="fs">
+        <select id="efFProv" onchange="renderEfec()">
+          <option value="">Todos proveedores</option>
+          <option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option>
+        </select>
+        <select id="efFEst" onchange="renderEfec()">
+          <option value="">Todos estados</option>
+          <option value="transito">En transito</option>
+          <option value="recibido">Recibido</option>
+        </select>
+      </div>
+    </div>
+    <div class="tw" id="efHist"></div>
+  </div>
+</div>
+
+<!-- MOVIMIENTOS -->
+
+<div id="pg-movimientos" class="pg">
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Entradas Registradas</div>
+      <div class="fs">
+        <select id="fMCli" onchange="renderMovs()" style="width:130px"><option value="">Todos</option></select>
+        <select id="fMProv" onchange="renderMovs()">
+          <option value="">Todos prov.</option>
+          <option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option>
+        </select>
+        <input type="date" id="fMDe" onchange="renderMovs()" style="width:128px">
+        <input type="date" id="fMA" onchange="renderMovs()" style="width:128px">
+      </div>
+    </div>
+    <div class="tw" id="tblMovs"></div>
+  </div>
+</div>
+
+<!-- CLIENTES -->
+
+<div id="pg-clientes" class="pg">
+  <div class="tc">
+    <div class="card">
+      <div class="ct">Agregar Cliente</div>
+      <div class="fg"><label>Nombre</label><input id="c_nom" placeholder="Nombre del cliente"></div>
+      <div class="fg"><label>Comision Total %</label><input type="number" id="c_com" placeholder="Ej: 2" step="0.01" oninput="calcCliPrev()"></div>
+      <div class="fg"><label>Tipo de comision</label>
+        <select id="c_tipo" onchange="calcCliPrev()">
+          <option value="iva">Antes de IVA (imp/1.16)</option>
+          <option value="directo">Directo sobre importe</option>
+          <option value="inverso">Inverso -- imp/(1+%/100)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Lleva Subagente?</label>
+        <select id="c_subOpt" onchange="onSubOpt()">
+          <option value="">No</option>
+          <option value="nuevo">Si -- Nuevo subagente</option>
+          <option value="existe">Si -- Ya registrado</option>
+        </select>
+      </div>
+      <div id="grpSubNvo" style="display:none" class="fg"><label>Nombre del Subagente</label><input id="c_subNom" placeholder="Nombre"></div>
+      <div id="grpSubEx" style="display:none" class="fg"><label>Seleccionar Subagente</label>
+        <select id="c_subSel"><option value="">-- Seleccionar --</option></select></div>
+      <div id="grpComSub" style="display:none" class="fg"><label>Comision al Subagente %</label>
+        <input type="number" id="c_comSub" placeholder="0.00" step="0.01" oninput="calcCliPrev()"></div>
+      <div id="cliPrev" class="mb"></div>
+      <button class="btn bp" style="width:100%" onclick="agregarCliente()">Guardar Cliente</button>
+    </div>
+    <div class="card"><div class="ct">Glosario de Clientes</div><div class="tw" id="tblCli"></div></div>
+  </div>
+</div>
+
+<!-- SUBAGENTES -->
+
+<div id="pg-subagentes" class="pg">
+  <div class="tc">
+    <div class="card">
+      <div class="ct">Agregar Subagente</div>
+      <div class="fg"><label>Nombre</label><input id="sa_nom" placeholder="Nombre"></div>
+      <div class="fg"><label>Notas</label><input id="sa_not" placeholder="Opcional"></div>
+      <button class="btn bp" style="width:100%" onclick="agregarSub()">Guardar Subagente</button>
+    </div>
+    <div class="card"><div class="ct">Subagentes</div><div class="tw" id="tblSubs"></div></div>
+  </div>
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Estado de Cuenta -- Subagente</div>
+      <select id="ecSubSel" onchange="renderECSub()" style="width:190px"><option value="">-- Seleccionar --</option></select>
+    </div>
+    <div id="ecSubCont"><div class="empty">Selecciona un subagente</div></div>
+  </div>
+</div>
+
+<!-- PROVEEDORES -->
+
+<div id="pg-proveedores" class="pg">
+  <div class="thr">
+    <div class="card" id="pL5"></div>
+    <div class="card" id="pL6"></div>
+    <div class="card" id="pL7"></div>
+  </div>
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Movimientos del Proveedor</div>
+      <div class="fs">
+        <select id="fProvSel" onchange="renderProvMovs()">
+          <option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option>
+        </select>
+        <button class="btn bg bsm" onclick="copyProvEC()">Copiar EC</button>
+      </div>
+    </div>
+    <div class="tw" id="tblProv"></div>
+  </div>
+</div>
+
+<!-- CUENTAS INTERNAS -->
+
+<div id="pg-cuentas" class="pg">
+  <div class="thr">
+    <div class="card" id="cRLC"></div>
+    <div class="card" id="cRecup"></div>
+    <div class="card" id="cCK"></div>
+  </div>
+  <div class="card"><div class="ct">Historial Interno</div><div class="tw" id="tblInt"></div></div>
+</div>
+
+<!-- ESTADOS DE CUENTA -->
+
+<div id="pg-estados" class="pg">
+  <div class="card">
+    <div class="fb mb">
+      <div class="ct" style="margin:0">Estado de Cuenta -- Cliente</div>
+      <select id="ecCliSel" onchange="renderEC()" style="width:190px"><option value="">-- Seleccionar --</option></select>
+    </div>
+    <div id="ecCliCont"><div class="empty">Selecciona un cliente</div></div>
+  </div>
+</div>
+
+<!-- ARQUEO -->
+
+<div id="pg-arqueo" class="pg">
+  <div class="fb mb">
+    <div class="ct" style="margin:0;font-size:13px">Arqueo del Dia</div>
+    <div class="fs">
+      <input type="date" id="arqueoF" onchange="renderArqueo()">
+      <button class="btn bg bsm" onclick="copyArqueo()">Copiar</button>
+    </div>
+  </div>
+  <div id="arqueoCont"></div>
+</div>
+
+<!-- ABONOS CLIENTES (efectivo recibido de cliente) -->
+
+<div id="pg-abonos" class="pg">
+  <div class="warn-box">Registra cuando un cliente te entrega efectivo. Suma a su saldo disponible.</div>
+  <div class="tc">
+    <div class="card">
+      <div class="ct">Registrar Abono de Cliente</div>
+      <div class="fg"><label>Cliente</label>
+        <select id="ab_cli" onchange="onABCli()"><option value="">-- Seleccionar --</option></select>
+        <div class="sdsp" id="abSaldoDisp">Saldo actual: <span id="abSaldoV"></span></div>
+      </div>
+      <div class="fg"><label>Monto recibido $</label><input type="number" id="ab_mnt" placeholder="0.00" oninput="onABCli()"></div>
+      <div class="fg"><label>Referencia</label><input id="ab_ref" placeholder="Ej: Efectivo para transf, Deposito en ventanilla..."></div>
+      <div class="fg"><label>Fecha</label><input type="date" id="ab_fec"></div>
+      <div class="fg"><label>Notas</label><input id="ab_not" placeholder="Opcional"></div>
+      <div id="abPrev" class="al ai" style="display:none"></div>
+      <button class="btn bp" style="width:100%" onclick="guardarAbono()">Registrar Abono</button>
+    </div>
+    <div class="card">
+      <div class="fb mb">
+        <div class="ct" style="margin:0">Historial de Abonos</div>
+        <select id="fABCli" onchange="renderAbonos()" style="width:160px"><option value="">Todos los clientes</option></select>
+      </div>
+      <div class="tw" id="tblAbonos"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROYECCION DE PAGOS -->
+
+<div id="pg-proyeccion" class="pg">
+  <div class="card mb">
+    <div class="ct">Proyeccion de Pagos en Efectivo</div>
+    <div class="fs" style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--t2)">Define cuanto planeas pagar a cada cliente manana. El total proyectado te indica cuanto efectivo necesitas.</div>
+    </div>
+    <div class="kg" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">
+      <div class="kpi"><div class="kl">Total que Debo</div><div class="kv red" id="proyTotalDebo"></div></div>
+      <div class="kpi"><div class="kl">Total Proyectado</div><div class="kv org" id="proyTotalProy"></div></div>
+      <div class="kpi"><div class="kl">Restante sin proyectar</div><div class="kv" id="proyRestante"></div></div>
+    </div>
+    <div class="tw" id="tblProyeccion"></div>
+    <div class="fe">
+      <button class="btn bg" onclick="limpiarProyeccion()">Limpiar todo</button>
+      <button class="btn bp" onclick="ejecutarProyeccion()">Registrar como Salidas</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODALS -->
+
+<div class="mo" id="moEC"><div class="md">
+  <div class="mdt" id="moECtit"></div>
+  <div class="ectxt" id="moECtxt"></div>
+  <div class="fe">
+    <button class="btn bg" onclick="cm('moEC')">Cerrar</button>
+    <button class="btn bp" onclick="copyEC()">Copiar WhatsApp</button>
+  </div>
+</div></div>
+
+<div class="mo" id="moVer"><div class="md">
+  <div class="mdt">Detalle</div>
+  <div id="moVerCont"></div>
+  <div class="fe"><button class="btn bg" onclick="cm('moVer')">Cerrar</button></div>
+</div></div>
+
+<div class="mo" id="moEditMov"><div class="md">
+  <div class="mdt">Editar Entrada</div>
+  <input type="hidden" id="em_id">
+  <div class="g2">
+    <div class="fg"><label>Titulo</label><input id="em_tit"></div>
+    <div class="fg"><label>Cliente</label><select id="em_cli"></select></div>
+    <div class="fg"><label>Proveedor</label>
+      <select id="em_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select></div>
+    <div class="fg"><label>Importe $</label><input type="number" id="em_imp"></div>
+    <div class="fg"><label>Transferencia incluida $</label><input type="number" id="em_trn"></div>
+    <div class="fg"><label>Fecha</label><input type="date" id="em_fec"></div>
+    <div class="fg"><label>Notas</label><input id="em_not"></div>
+  </div>
+  <div class="fe">
+    <button class="btn bg" onclick="cm('moEditMov')">Cancelar</button>
+    <button class="btn bp" onclick="guardarEditMov()">Guardar</button>
+  </div>
+</div></div>
+
+<div class="mo" id="moEditSal"><div class="md">
+  <div class="mdt">Editar Salida</div>
+  <input type="hidden" id="es_id">
+  <div class="g2">
+    <div class="fg"><label>Cliente</label><select id="es_cli"></select></div>
+    <div class="fg"><label>Tipo</label>
+      <select id="es_tipo" onchange="onEST()">
+        <option value="transferencia">Transferencia nacional</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="extranjero">Extranjero</option>
+      </select></div>
+    <div class="fg"><label>Proveedor</label>
+      <select id="es_prov"><option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option></select></div>
+    <div class="fg"><label>Monto $</label><input type="number" id="es_mnt"></div>
+    <div id="esExtG" style="display:none" class="fg"><label>Comision extranjero %</label><input type="number" id="es_comExt" step="0.01"></div>
+    <div id="esTrnG" style="display:none" class="fg">
+      <label style="flex-direction:row;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12px">
+        <input type="checkbox" id="es_trn" style="width:auto"> En transito
+      </label>
+    </div>
+    <div class="fg"><label>Referencia</label><input id="es_ref"></div>
+    <div class="fg"><label>Fecha</label><input type="date" id="es_fec"></div>
+    <div class="fg"><label>Notas</label><input id="es_not"></div>
+  </div>
+  <div class="fe">
+    <button class="btn bg" onclick="cm('moEditSal')">Cancelar</button>
+    <button class="btn bp" onclick="guardarEditSal()">Guardar</button>
+  </div>
+</div></div>
+
+<script>
+var S = {clientes:[],subagentes:[],movimientos:[],salidas:[],efectivos:[]};
+var STORE_KEY = 'fck_v6';
+
+function getStorage() {
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return localStorage; } catch(e) {}
+  var m = {};
+  return { getItem: function(k){ return m[k]||null; }, setItem: function(k,v){ m[k]=v; } };
+}
+var ST = getStorage();
+
+function loadS() {
+  try {
+    var r = ST.getItem(STORE_KEY);
+    if (r) { S = JSON.parse(r); return; }
+    var o = ST.getItem('fck_v5');
+    if (o) { var p=JSON.parse(o); S.clientes=p.clientes||[]; S.subagentes=p.subagentes||[]; S.movimientos=p.movimientos||[]; S.salidas=p.salidas||[]; S.efectivos=p.efectivos||[]; }
+  } catch(e) {}
+}
+function saveS() { try { ST.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) {} }
+
+var PROVS = ['L5','L6','L7'];
+var COSTOS = {ofic:0.95, rlc:0.05, rec:0.25};
+
+function fmt(n) { return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function pBdg(p) {
+  if(p==='L5') return '<span class="bdg bl5">L5</span>';
+  if(p==='L6') return '<span class="bdg bl6">L6</span>';
+  return '<span class="bdg bl7">L7</span>';
+}
+function tBdg(t) {
+  if(t==='transferencia') return '<span class="bdg bt">Transf.</span>';
+  if(t==='efectivo')      return '<span class="bdg be">Efectivo</span>';
+  if(t==='extranjero')    return '<span class="bdg bxt">Extran.</span>';
+  return '<span class="bdg bin">'+t+'</span>';
+}
+
+function calcular(imp, pct, tipo, subPct) {
+  subPct = subPct || 0;
+  var base, retCli, ck;
+  if(tipo==='iva'){
+    base = imp/1.16;
+    retCli = imp - base*(pct/100);
+    var ofic=base*(COSTOS.ofic/100), rlc=base*(COSTOS.rlc/100), rec=base*(COSTOS.rec/100);
+    var comSub=base*(subPct/100);
+    ck = base*((pct-1.25-subPct)/100);
+    return {base:base,ofic:ofic,rlc:rlc,rec:rec,retOfic:imp-ofic,retCli:retCli,comSub:comSub,ck:ck};
+  } else if(tipo==='directo'){
+    base = imp;
+    retCli = imp - imp*(pct/100);
+    var ofic=base*(COSTOS.ofic/100), rlc=base*(COSTOS.rlc/100), rec=base*(COSTOS.rec/100);
+    var comSub=base*(subPct/100);
+    ck = imp*(pct/100)-(ofic+rlc+rec)-comSub;
+    return {base:base,ofic:ofic,rlc:rlc,rec:rec,retOfic:imp-ofic,retCli:retCli,comSub:comSub,ck:ck};
+  } else {
+    // inverso: imp/(1+pct/100) e.g. 100000/1.03 = 97087.37
+    base = imp/(1+pct/100);
+    retCli = base;
+    var ofic=base*(COSTOS.ofic/100), rlc=base*(COSTOS.rlc/100), rec=base*(COSTOS.rec/100);
+    var comSub=base*(subPct/100);
+    // comision cobrada = imp - base = imp*(pct/(100+pct))
+    var comCobrada = imp - base;
+    // my costs come from base
+    ck = comCobrada - (ofic+rlc+rec) - comSub;
+    return {base:base,ofic:ofic,rlc:rlc,rec:rec,retOfic:imp-ofic,retCli:retCli,comSub:comSub,ck:ck};
+  }
+}
+
+function getSaldoCli(cid) {
+  var e=0,s=0;
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) e+=S.movimientos[i].saldoCli;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) s+=S.salidas[i].montoCli;
+  return e-s;
+}
+function getSaldoSub(sid) {
+  var cids={};
+  for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].subId==sid) cids[S.clientes[i].id]=true;
+  var g=0,p=0;
+  for(var i=0;i<S.movimientos.length;i++) if(cids[S.movimientos[i].cid]) g+=S.movimientos[i].comSub;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].saId==sid) p+=S.salidas[i].montoCli;
+  return g-p;
+}
+function getSaldoProv(prov) {
+  var d=0,s=0;
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) d+=S.movimientos[i].retOfic;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) s+=S.salidas[i].montoTotal;
+  return d-s;
+}
+function getCuentas() {
+  var rb=0,cb=0,kb=0,rs=0,cs=0,ks=0;
+  for(var i=0;i<S.movimientos.length;i++){rb+=S.movimientos[i].rlc;cb+=S.movimientos[i].rec;kb+=S.movimientos[i].ck;}
+  for(var i=0;i<S.salidas.length;i++){
+    var s=S.salidas[i];
+    if(s.tipo==='extranjero') kb+=(s.comExtM||0);
+    if(s.cuentaInt==='rlc') rs+=s.montoCli;
+    if(s.cuentaInt==='rec') cs+=s.montoCli;
+    if(s.cuentaInt==='ck')  ks+=s.montoCli;
+  }
+  return {rlc:rb-rs,rec:cb-cs,ck:kb-ks,rlcB:rb,recB:cb,ckB:kb,rlcS:rs,recS:cs,ckS:ks};
+}
+
+function mergeObj(a, b) {
+  var r={}, k;
+  for(k in a) if(a.hasOwnProperty(k)) r[k]=a[k];
+  for(k in b) if(b.hasOwnProperty(k)) r[k]=b[k];
+  return r;
+}
+
+document.getElementById('navBar').addEventListener('click', function(e) {
+  var tab = e.target;
+  while(tab && !tab.getAttribute('data-pg')) tab = tab.parentElement;
+  if(!tab) return;
+  var pg = tab.getAttribute('data-pg');
+  var tabs = document.querySelectorAll('.tab');
+  var pgs  = document.querySelectorAll('.pg');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  for(var i=0;i<pgs.length;i++)  pgs[i].classList.remove('on');
+  tab.classList.add('on');
+  document.getElementById('pg-'+pg).classList.add('on');
+  if(pg==='dashboard')   renderDashboard();
+  if(pg==='movimientos') renderMovs();
+  if(pg==='salidas')   { populateAll(); renderSalidas(); }
+  if(pg==='clientes')    renderClientes();
+  if(pg==='subagentes')  renderSubs();
+  if(pg==='proveedores') renderProveedores();
+  if(pg==='cuentas')     renderCuentas();
+  if(pg==='estados')     renderECSelects();
+  if(pg==='abonos')  { populateAll(); renderAbonos(); document.getElementById('ab_fec').value=today(); }
+  if(pg==='proyeccion') { renderProyeccion(); }
+  if(pg==='efectivo')  { document.getElementById('ef_fec').value=today(); document.getElementById('ef_recFec').value=today(); renderEfec(); }
+  if(pg==='arqueo')    { document.getElementById('arqueoF').value=today(); renderArqueo(); }
+});
+
+function populateAll() {
+  var cOpts='';
+  for(var i=0;i<S.clientes.length;i++) cOpts+='<option value="'+S.clientes[i].id+'">'+S.clientes[i].nombre+'</option>';
+  // Selects with "Todos" prefix
+  var allOpts=['fMCli','fSCli','fABCli'];
+  for(var i=0;i<allOpts.length;i++){
+    var el=document.getElementById(allOpts[i]);
+    if(!el) continue;
+    var cur=el.value;
+    el.innerHTML='<option value="">Todos</option>'+cOpts;
+    if(cur) el.value=cur;
+  }
+  // Selects with "-- Seleccionar --" prefix
+  var ids=['f_cli','s_cli','ecCliSel','ab_cli'];
+  for(var i=0;i<ids.length;i++){
+    var el=document.getElementById(ids[i]);
+    if(!el) continue;
+    var cur=el.value;
+    el.innerHTML='<option value="">-- Seleccionar --</option>'+cOpts;
+    if(cur) el.value=cur;
+  }
+  // Edit modals - no prefix
+  var eids=['em_cli','es_cli'];
+  for(var i=0;i<eids.length;i++){
+    var el=document.getElementById(eids[i]);
+    if(!el) continue;
+    var cur=el.value;
+    el.innerHTML=cOpts;
+    if(cur) el.value=cur;
+  }
+  var sOpts='<option value="">-- Seleccionar --</option>';
+  for(var i=0;i<S.subagentes.length;i++) sOpts+='<option value="'+S.subagentes[i].id+'">'+S.subagentes[i].nombre+'</option>';
+  var sids=['c_subSel','ecSubSel'];
+  for(var i=0;i<sids.length;i++){
+    var el=document.getElementById(sids[i]);
+    if(!el) continue;
+    var cur=el.value;
+    el.innerHTML=sOpts;
+    if(cur) el.value=cur;
+  }
+}
+
+function agregarSub() {
+  var nom=document.getElementById('sa_nom').value.trim();
+  if(!nom){alert('Nombre requerido');return;}
+  S.subagentes.push({id:Date.now(),nombre:nom,notas:document.getElementById('sa_not').value.trim()});
+  saveS(); renderSubs(); populateAll();
+  document.getElementById('sa_nom').value=''; document.getElementById('sa_not').value='';
+}
+function eliminarSub(id) {
+  if(!confirm('Eliminar?')) return;
+  var ns=[];
+  for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id!==id) ns.push(S.subagentes[i]);
+  S.subagentes=ns; saveS(); renderSubs(); populateAll();
+}
+function renderSubs() {
+  var el=document.getElementById('tblSubs');
+  if(!S.subagentes.length){el.innerHTML='<div class="empty">Sin subagentes</div>';return;}
+  var h='<table><thead><tr><th>Nombre</th><th>Notas</th><th>Saldo</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<S.subagentes.length;i++){
+    var s=S.subagentes[i]; var sal=getSaldoSub(s.id);
+    h+='<tr><td>'+s.nombre+'</td><td>'+(s.notas||'--')+'</td><td style="color:'+(sal>=0?'var(--grn)':'var(--red)')+'">'+fmt(sal)+'</td><td><button class="btn bd bsm" onclick="eliminarSub('+s.id+')">X</button></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>'; populateAll();
+}
+
+function onSubOpt() {
+  var v=document.getElementById('c_subOpt').value;
+  document.getElementById('grpSubNvo').style.display=v==='nuevo'?'block':'none';
+  document.getElementById('grpSubEx').style.display=v==='existe'?'block':'none';
+  document.getElementById('grpComSub').style.display=v?'flex':'none';
+  calcCliPrev();
+}
+function calcCliPrev() {
+  var com=parseFloat(document.getElementById('c_com').value)||0;
+  var tipo=document.getElementById('c_tipo').value;
+  var sub=parseFloat(document.getElementById('c_comSub').value)||0;
+  if(!com){document.getElementById('cliPrev').innerHTML='';return;}
+  var r=calcular(100000,com,tipo,sub);
+  var tipoLabel=tipo==='iva'?'Antes IVA':tipo==='directo'?'Directo':'Inverso (100000/'+(1+com/100)+')';
+  document.getElementById('cliPrev').innerHTML='<div class="al ai">Ej $100k ('+tipoLabel+') -- Retorno: '+fmt(r.retCli)+' | CK: '+fmt(r.ck)+'</div>';
+}
+function agregarCliente() {
+  var nom=document.getElementById('c_nom').value.trim();
+  var com=parseFloat(document.getElementById('c_com').value);
+  var tipo=document.getElementById('c_tipo').value;
+  var opt=document.getElementById('c_subOpt').value;
+  var comSub=parseFloat(document.getElementById('c_comSub').value)||0;
+  if(!nom||!com){alert('Nombre y comision requeridos');return;}
+  var subId=0;
+  if(opt==='nuevo'){
+    var sn=document.getElementById('c_subNom').value.trim();
+    if(!sn){alert('Escribe el nombre del subagente');return;}
+    var ns={id:Date.now(),nombre:sn,notas:''};
+    S.subagentes.push(ns); subId=ns.id;
+  } else if(opt==='existe'){
+    subId=parseInt(document.getElementById('c_subSel').value)||0;
+    if(!subId){alert('Selecciona el subagente');return;}
+  }
+  S.clientes.push({id:Date.now()+1,nombre:nom,com:com,tipo:tipo,subId:subId,comSub:comSub});
+  saveS(); renderClientes(); renderSubs(); populateAll();
+  var flds=['c_nom','c_com','c_comSub','c_subNom'];
+  for(var i=0;i<flds.length;i++){var e=document.getElementById(flds[i]);if(e)e.value='';}
+  document.getElementById('c_subOpt').value='';
+  document.getElementById('grpSubNvo').style.display='none';
+  document.getElementById('grpSubEx').style.display='none';
+  document.getElementById('grpComSub').style.display='none';
+  document.getElementById('cliPrev').innerHTML='';
+}
+function eliminarCliente(id) {
+  if(!confirm('Eliminar?')) return;
+  var nc=[];
+  for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id!==id) nc.push(S.clientes[i]);
+  S.clientes=nc; saveS(); renderClientes(); populateAll();
+}
+function renderClientes() {
+  var el=document.getElementById('tblCli');
+  if(!S.clientes.length){el.innerHTML='<div class="empty">Sin clientes</div>';return;}
+  var h='<table><thead><tr><th>Cliente</th><th>Com%</th><th>Tipo</th><th>Subagente</th><th>Saldo</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<S.clientes.length;i++){
+    var c=S.clientes[i]; var sub=null;
+    for(var j=0;j<S.subagentes.length;j++) if(S.subagentes[j].id===c.subId){sub=S.subagentes[j];break;}
+    var sal=getSaldoCli(c.id);
+    h+='<tr><td>'+c.nombre+'</td><td>'+c.com+'%</td><td><span class="bdg '+(c.tipo==='iva'?'bt':'be')+'">'+(c.tipo==='iva'?'IVA':c.tipo==='directo'?'Dir.':'Inv.')+'</span></td><td>'+(sub?sub.nombre:'--')+'</td><td style="color:'+(sal>=0?'var(--grn)':'var(--red)')+'">'+fmt(sal)+'</td><td><button class="btn bd bsm" onclick="eliminarCliente('+c.id+')">X</button></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+  var sel=document.getElementById('c_subSel'); sel.innerHTML='<option value="">--</option>';
+  for(var i=0;i<S.subagentes.length;i++) sel.innerHTML+='<option value="'+S.subagentes[i].id+'">'+S.subagentes[i].nombre+'</option>';
+}
+
+function calcPrev() {
+  var cid=parseInt(document.getElementById('f_cli').value);
+  var imp=parseFloat(document.getElementById('f_imp').value)||0;
+  var trn=parseFloat(document.getElementById('f_trn').value)||0;
+  var box=document.getElementById('prevBox');
+  if(!cid||!imp){box.classList.remove('on');return;}
+  var c=null;
+  for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
+  if(!c) return;
+  var r=calcular(imp,c.com,c.tipo,c.comSub);
+  var sc=r.retCli-trn;
+  var sub=null;
+  for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===c.subId){sub=S.subagentes[i];break;}
+  var h='';
+  var rows=[
+    ['Importe depositado',fmt(imp),''],
+    ['Retorno Oficina (.95%)',fmt(r.retOfic),'red'],
+    ['Retorno Cliente ('+c.com+'%)',fmt(r.retCli),'grn'],
+    trn?['Transfer incluida','- '+fmt(trn),'org']:null,
+    trn?['Saldo neto cliente',fmt(sc),'gld']:null,
+    ['RLC (.05%)',fmt(r.rlc),'blu'],
+    ['Recuperacion (.25%)',fmt(r.rec),'blu'],
+    sub?['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(r.comSub),'pur']:null,
+    ['CK (ganancia)',fmt(r.ck),'gld']
+  ];
+  for(var i=0;i<rows.length;i++){
+    if(!rows[i]) continue;
+    h+='<div class="pvr"><span class="lb">'+rows[i][0]+'</span><span class="vl '+rows[i][2]+'">'+rows[i][1]+'</span></div>';
+  }
+  document.getElementById('prevRows').innerHTML=h;
+  box.classList.add('on');
+}
+function guardarOp() {
+  var tit=document.getElementById('f_tit').value.trim();
+  var cid=parseInt(document.getElementById('f_cli').value);
+  var prov=document.getElementById('f_prov').value;
+  var imp=parseFloat(document.getElementById('f_imp').value)||0;
+  var trn=parseFloat(document.getElementById('f_trn').value)||0;
+  var fec=document.getElementById('f_fec').value||today();
+  var not=document.getElementById('f_not').value.trim();
+  if(!tit||!cid||!imp){alert('Titulo, cliente e importe requeridos');return;}
+  var c=null;
+  for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
+  var r=calcular(imp,c.com,c.tipo,c.comSub);
+  S.movimientos.unshift({id:Date.now(),titulo:tit,cid:cid,prov:prov,fecha:fec,notas:not,importe:imp,trans:trn,retOfic:r.retOfic,retCli:r.retCli,saldoCli:r.retCli-trn,rlc:r.rlc,rec:r.rec,comSub:r.comSub,ck:r.ck});
+  saveS(); resetForm(); alert('Guardado');
+}
+function resetForm() {
+  var flds=['f_tit','f_imp','f_trn','f_not'];
+  for(var i=0;i<flds.length;i++) document.getElementById(flds[i]).value='';
+  document.getElementById('f_cli').value='';
+  document.getElementById('f_fec').value=today();
+  document.getElementById('prevBox').classList.remove('on');
+}
+
+function onSTipo() {
+  var t=document.getElementById('s_tipo').value;
+  document.getElementById('s_extG').style.display=t==='extranjero'?'block':'none';
+  document.getElementById('s_trnG').style.display=t==='efectivo'?'block':'none';
+  onSC();
+}
+function onSC() {
+  var cid=parseInt(document.getElementById('s_cli').value);
+  var mnt=parseFloat(document.getElementById('s_mnt').value)||0;
+  var tipo=document.getElementById('s_tipo').value;
+  var comE=parseFloat(document.getElementById('s_comExt').value)||0;
+  var disp=document.getElementById('sDisp'); var val=document.getElementById('sDispV'); var warn=document.getElementById('sWarn');
+  if(!cid){disp.classList.remove('on');warn.style.display='none';return;}
+  var saldo=getSaldoCli(cid);
+  disp.classList.add('on'); val.className=saldo>=0?'ok':'nok'; val.textContent=fmt(saldo);
+  var ep=document.getElementById('s_extPrev');
+  if(tipo==='extranjero'&&mnt>0&&comE>0){ep.style.display='block';ep.textContent='Trans: '+fmt(mnt)+' + Comision ('+comE+'%): '+fmt(mnt*(comE/100))+' = Total cliente: '+fmt(mnt+mnt*(comE/100));}
+  else ep.style.display='none';
+  var total=tipo==='extranjero'?mnt+mnt*(comE/100):mnt;
+  if(total>0&&total>saldo){warn.style.display='block';warn.textContent='Total ('+fmt(total)+') supera saldo ('+fmt(saldo)+')';}
+  else warn.style.display='none';
+}
+function guardarSalida() {
+  var cid=parseInt(document.getElementById('s_cli').value);
+  var tipo=document.getElementById('s_tipo').value;
+  var prov=document.getElementById('s_prov').value;
+  var mnt=parseFloat(document.getElementById('s_mnt').value)||0;
+  var ref=document.getElementById('s_ref').value.trim();
+  var fec=document.getElementById('s_fec').value||today();
+  var not=document.getElementById('s_not').value.trim();
+  var comE=tipo==='extranjero'?(parseFloat(document.getElementById('s_comExt').value)||0):0;
+  var trn=tipo==='efectivo'&&document.getElementById('s_trn').checked;
+  if(!cid||!mnt){alert('Cliente y monto requeridos');return;}
+  var saldo=getSaldoCli(cid);
+  var comExtM=mnt*(comE/100);
+  var montoCli=tipo==='extranjero'?mnt+comExtM:mnt;
+  if(montoCli>saldo&&!confirm('Supera saldo ('+fmt(saldo)+'). Continuar?')) return;
+  S.salidas.unshift({id:Date.now(),cid:cid,tipo:tipo,prov:prov,montoCli:montoCli,montoTotal:mnt,comExt:comE,comExtM:comExtM,transito:trn,ref:ref,fecha:fec,notas:not,saId:0,cuentaInt:''});
+  saveS();
+  var flds=['s_mnt','s_ref','s_not','s_comExt'];
+  for(var i=0;i<flds.length;i++) document.getElementById(flds[i]).value='';
+  document.getElementById('s_cli').value=''; document.getElementById('s_fec').value=today();
+  document.getElementById('sDisp').classList.remove('on'); document.getElementById('sWarn').style.display='none';
+  document.getElementById('s_extPrev').style.display='none'; document.getElementById('s_extG').style.display='none';
+  document.getElementById('s_trnG').style.display='none'; document.getElementById('s_tipo').value='transferencia';
+  document.getElementById('s_trn').checked=false;
+  renderSalidas(); alert('Salida registrada');
+}
+function eliminarSalida(id) {
+  if(!confirm('Eliminar?')) return;
+  var ns=[];
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id!==id) ns.push(S.salidas[i]);
+  S.salidas=ns; saveS(); renderSalidas();
+}
+function editarSal(id) {
+  var s=null;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id===id){s=S.salidas[i];break;}
+  document.getElementById('es_id').value=id; populateAll();
+  document.getElementById('es_cli').value=s.cid; document.getElementById('es_tipo').value=s.tipo;
+  document.getElementById('es_prov').value=s.prov; document.getElementById('es_mnt').value=s.montoTotal;
+  document.getElementById('es_comExt').value=s.comExt||''; document.getElementById('es_ref').value=s.ref||'';
+  document.getElementById('es_fec').value=s.fecha; document.getElementById('es_not').value=s.notas||'';
+  document.getElementById('es_trn').checked=!!s.transito; onEST();
+  document.getElementById('moEditSal').classList.add('on');
+}
+function onEST() {
+  var t=document.getElementById('es_tipo').value;
+  document.getElementById('esExtG').style.display=t==='extranjero'?'flex':'none';
+  document.getElementById('esTrnG').style.display=t==='efectivo'?'block':'none';
+}
+function guardarEditSal() {
+  var id=parseInt(document.getElementById('es_id').value);
+  var idx=-1;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id===id){idx=i;break;}
+  if(idx<0) return;
+  var tipo=document.getElementById('es_tipo').value;
+  var mnt=parseFloat(document.getElementById('es_mnt').value)||0;
+  var comE=tipo==='extranjero'?(parseFloat(document.getElementById('es_comExt').value)||0):0;
+  var comExtM=mnt*(comE/100); var montoCli=tipo==='extranjero'?mnt+comExtM:mnt;
+  S.salidas[idx]=mergeObj(S.salidas[idx],{cid:parseInt(document.getElementById('es_cli').value),tipo:tipo,prov:document.getElementById('es_prov').value,montoCli:montoCli,montoTotal:mnt,comExt:comE,comExtM:comExtM,transito:tipo==='efectivo'&&document.getElementById('es_trn').checked,ref:document.getElementById('es_ref').value.trim(),fecha:document.getElementById('es_fec').value,notas:document.getElementById('es_not').value.trim()});
+  saveS(); cm('moEditSal'); renderSalidas(); alert('Actualizado');
+}
+function renderSalidas() {
+  var cid=document.getElementById('fSCli').value; var tipo=document.getElementById('fSTipo').value;
+  var sal=[];
+  for(var i=0;i<S.salidas.length;i++){
+    var s=S.salidas[i];
+    if(cid&&s.cid!=cid) continue;
+    if(tipo&&s.tipo!==tipo) continue;
+    sal.push(s);
+  }
+  var el=document.getElementById('tblSal');
+  if(!sal.length){el.innerHTML='<div class="empty">Sin salidas</div>';return;}
+  var h='<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Prov.</th><th>Referencia</th><th>Monto</th><th>Com.Ext</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<sal.length;i++){
+    var s=sal[i]; var c=null;
+    for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===s.cid){c=S.clientes[j];break;}
+    h+='<tr class="p'+s.prov+'"><td>'+s.fecha+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+tBdg(s.tipo)+(s.transito?' [T]':'')+'</td><td>'+pBdg(s.prov)+'</td><td style="text-align:left">'+(s.ref||'--')+'</td><td style="color:var(--org)">'+fmt(s.montoCli)+'</td><td style="color:var(--pur)">'+(s.comExtM?fmt(s.comExtM):'--')+'</td><td><div style="display:flex;gap:3px"><button class="btn bg bsm" onclick="editarSal('+s.id+')">Ed</button><button class="btn bd bsm" onclick="eliminarSalida('+s.id+')">X</button></div></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function solicitarEfec() {
+  var prov=document.getElementById('ef_prov').value;
+  var mnt=parseFloat(document.getElementById('ef_mnt').value)||0;
+  if(!mnt){alert('Ingresa el monto');return;}
+  S.efectivos.unshift({id:Date.now(),prov:prov,monto:mnt,ref:document.getElementById('ef_ref').value.trim(),fecha:document.getElementById('ef_fec').value||today(),notas:document.getElementById('ef_not').value.trim(),estado:'transito',fechaRec:null,notasRec:''});
+  saveS(); document.getElementById('ef_mnt').value=''; document.getElementById('ef_ref').value=''; document.getElementById('ef_not').value='';
+  renderEfec(); renderDashboard(); alert('Solicitud registrada en transito');
+}
+function recibirEfec() {
+  var id=parseInt(document.getElementById('ef_recSel').value);
+  if(!id){alert('Selecciona una solicitud');return;}
+  var idx=-1;
+  for(var i=0;i<S.efectivos.length;i++) if(S.efectivos[i].id===id){idx=i;break;}
+  if(idx<0) return;
+  S.efectivos[idx].estado='recibido'; S.efectivos[idx].fechaRec=document.getElementById('ef_recFec').value||today(); S.efectivos[idx].notasRec=document.getElementById('ef_recNot').value.trim();
+  saveS(); document.getElementById('ef_recSel').value=''; document.getElementById('ef_recNot').value='';
+  renderEfec(); renderDashboard(); alert('Efectivo confirmado como recibido');
+}
+function eliminarEfec(id) {
+  if(!confirm('Eliminar?')) return;
+  var ne=[];
+  for(var i=0;i<S.efectivos.length;i++) if(S.efectivos[i].id!==id) ne.push(S.efectivos[i]);
+  S.efectivos=ne; saveS(); renderEfec(); renderDashboard();
+}
+function renderEfec() {
+  var fprov=document.getElementById('efFProv').value; var fest=document.getElementById('efFEst').value;
+  var enTrn=[];
+  for(var i=0;i<S.efectivos.length;i++) if(S.efectivos[i].estado==='transito') enTrn.push(S.efectivos[i]);
+  document.getElementById('efTrnCnt').textContent=enTrn.length?'('+enTrn.length+')':'';
+  var tl=document.getElementById('efTrnList');
+  if(!enTrn.length){tl.innerHTML='<div class="empty">Sin solicitudes en transito</div>';}
+  else {
+    var h='';
+    for(var i=0;i<enTrn.length;i++){
+      var e=enTrn[i];
+      h+='<div class="efcard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'+pBdg(e.prov)+'<span style="font-size:13px;color:var(--org);font-weight:700">'+fmt(e.monto)+'</span></div><div style="font-size:11px;color:var(--t2)">'+e.fecha+' - '+(e.ref||'Sin referencia')+'</div></div>';
+    }
+    tl.innerHTML=h;
+  }
+  var sel=document.getElementById('ef_recSel');
+  sel.innerHTML='<option value="">-- Seleccionar --</option>';
+  for(var i=0;i<enTrn.length;i++){var e=enTrn[i];sel.innerHTML+='<option value="'+e.id+'">'+e.fecha+' - '+e.prov+' - '+fmt(e.monto)+(e.ref?' - '+e.ref:'')+'</option>';}
+  var lista=[];
+  for(var i=0;i<S.efectivos.length;i++){
+    var e=S.efectivos[i];
+    if(fprov&&e.prov!==fprov) continue;
+    if(fest&&e.estado!==fest) continue;
+    lista.push(e);
+  }
+  lista.sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  var totT=0,totR=0;
+  for(var i=0;i<lista.length;i++){if(lista[i].estado==='transito')totT+=lista[i].monto;else totR+=lista[i].monto;}
+  var el=document.getElementById('efHist');
+  if(!lista.length){el.innerHTML='<div class="empty">Sin registros</div>';return;}
+  var h='<div class="kg" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px"><div class="kpi"><div class="kl">En Transito</div><div class="kv org">'+fmt(totT)+'</div></div><div class="kpi"><div class="kl">Recibido</div><div class="kv grn">'+fmt(totR)+'</div></div><div class="kpi"><div class="kl">Registros</div><div class="kv">'+lista.length+'</div></div></div>';
+  h+='<table><thead><tr><th>Fecha Sol.</th><th>Prov.</th><th>Referencia</th><th>Monto</th><th>Estado</th><th>Fecha Rec.</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<lista.length;i++){
+    var e=lista[i];
+    var eb=e.estado==='transito'?'<span class="bdg" style="background:rgba(224,154,58,.15);color:var(--org);border:1px solid rgba(224,154,58,.3)">Transito</span>':'<span class="bdg" style="background:rgba(76,175,130,.15);color:var(--grn);border:1px solid rgba(76,175,130,.3)">Recibido</span>';
+    h+='<tr class="'+(e.estado==='recibido'?'trnrow':'')+'"><td>'+e.fecha+'</td><td>'+pBdg(e.prov)+'</td><td style="text-align:left">'+(e.ref||'--')+'</td><td style="color:var(--org)">'+fmt(e.monto)+'</td><td>'+eb+'</td><td>'+(e.fechaRec||'--')+'</td><td><button class="btn bd bsm" onclick="eliminarEfec('+e.id+')">X</button></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function renderMovs() {
+  var cid=document.getElementById('fMCli').value; var prov=document.getElementById('fMProv').value;
+  var de=document.getElementById('fMDe').value; var a=document.getElementById('fMA').value;
+  var movs=[];
+  for(var i=0;i<S.movimientos.length;i++){
+    var m=S.movimientos[i];
+    if(cid&&m.cid!=cid) continue;
+    if(prov&&m.prov!==prov) continue;
+    if(de&&m.fecha<de) continue;
+    if(a&&m.fecha>a) continue;
+    movs.push(m);
+  }
+  var el=document.getElementById('tblMovs');
+  if(!movs.length){el.innerHTML='<div class="empty">Sin movimientos</div>';return;}
+  var h='<table><thead><tr><th>Fecha</th><th>Titulo</th><th>Cliente</th><th>Prov.</th><th>Deposito</th><th>Ret.Ofic</th><th>Ret.Cli</th><th>Trans</th><th>Saldo Cli</th><th>RLC</th><th>Rec</th><th>CK</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<movs.length;i++){
+    var m=movs[i]; var c=null;
+    for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}
+    h+='<tr class="p'+m.prov+'"><td>'+m.fecha+'</td><td>'+m.titulo+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+pBdg(m.prov)+'</td><td>'+fmt(m.importe)+'</td><td style="color:var(--red)">'+fmt(m.retOfic)+'</td><td style="color:var(--grn)">'+fmt(m.retCli)+'</td><td style="color:var(--org)">'+(m.trans?fmt(m.trans):'--')+'</td><td style="color:var(--grn)">'+fmt(m.saldoCli)+'</td><td style="color:var(--blu)">'+fmt(m.rlc)+'</td><td style="color:var(--blu)">'+fmt(m.rec)+'</td><td style="color:var(--acc2)">'+fmt(m.ck)+'</td><td><div style="display:flex;gap:3px"><button class="btn bg bsm" onclick="verMov('+m.id+')">Ver</button><button class="btn bg bsm" onclick="editarMov('+m.id+')">Ed</button><button class="btn bd bsm" onclick="eliminarMov('+m.id+')">X</button></div></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+}
+function verMov(id){
+  var m=null;
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id===id){m=S.movimientos[i];break;}
+  var c=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===m.cid){c=S.clientes[i];break;}
+  var sub=null; if(c) for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===c.subId){sub=S.subagentes[i];break;}
+  var rows=[['Fecha',m.fecha],['Titulo',m.titulo],['Cliente',c?c.nombre:'?'],['Proveedor',m.prov],['Importe',fmt(m.importe)],['Ret. Oficina',fmt(m.retOfic)],['Ret. Cliente',fmt(m.retCli)],['Trans incluida',m.trans?fmt(m.trans):'--'],['Saldo Cliente',fmt(m.saldoCli)],['RLC',fmt(m.rlc)],['Recuperacion',fmt(m.rec)],['Subagente',sub?sub.nombre+' -- '+fmt(m.comSub):'--'],['CK',fmt(m.ck)],['Notas',m.notas||'--']];
+  var h='';
+  for(var i=0;i<rows.length;i++) h+='<div class="pvr"><span class="lb">'+rows[i][0]+'</span><span class="vl">'+rows[i][1]+'</span></div>';
+  document.getElementById('moVerCont').innerHTML=h;
+  document.getElementById('moVer').classList.add('on');
+}
+function editarMov(id){
+  var m=null;
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id===id){m=S.movimientos[i];break;}
+  document.getElementById('em_id').value=id; populateAll();
+  document.getElementById('em_tit').value=m.titulo; document.getElementById('em_cli').value=m.cid;
+  document.getElementById('em_prov').value=m.prov; document.getElementById('em_imp').value=m.importe;
+  document.getElementById('em_trn').value=m.trans||''; document.getElementById('em_fec').value=m.fecha;
+  document.getElementById('em_not').value=m.notas||'';
+  document.getElementById('moEditMov').classList.add('on');
+}
+function guardarEditMov(){
+  var id=parseInt(document.getElementById('em_id').value);
+  var idx=-1;
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id===id){idx=i;break;}
+  if(idx<0) return;
+  var cid=parseInt(document.getElementById('em_cli').value);
+  var imp=parseFloat(document.getElementById('em_imp').value)||0;
+  var trn=parseFloat(document.getElementById('em_trn').value)||0;
+  var tit=document.getElementById('em_tit').value.trim();
+  if(!tit||!cid||!imp){alert('Faltan datos');return;}
+  var c=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
+  var r=calcular(imp,c.com,c.tipo,c.comSub);
+  S.movimientos[idx]=mergeObj(S.movimientos[idx],{titulo:tit,cid:cid,prov:document.getElementById('em_prov').value,fecha:document.getElementById('em_fec').value,notas:document.getElementById('em_not').value.trim(),importe:imp,trans:trn,retOfic:r.retOfic,retCli:r.retCli,saldoCli:r.retCli-trn,rlc:r.rlc,rec:r.rec,comSub:r.comSub,ck:r.ck});
+  saveS(); cm('moEditMov'); renderMovs(); alert('Actualizado');
+}
+function eliminarMov(id){
+  if(!confirm('Eliminar?')) return;
+  var nm=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id!==id) nm.push(S.movimientos[i]);
+  S.movimientos=nm; saveS(); renderMovs();
+}
+
+function renderProveedores(){
+  for(var p=0;p<PROVS.length;p++){
+    var prov=PROVS[p]; var saldo=getSaldoProv(prov);
+    var totEnt=0,debO=0,totSal=0;
+    for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov){totEnt+=S.movimientos[i].importe;debO+=S.movimientos[i].retOfic;}
+    for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) totSal+=S.salidas[i].montoTotal;
+    document.getElementById('p'+prov).innerHTML='<div class="ct">'+pBdg(prov)+'</div><div class="pvr"><span class="lb">Vol. Operado</span><span class="vl">'+fmt(totEnt)+'</span></div><div class="pvr"><span class="lb">Les debemos</span><span class="vl red">'+fmt(debO)+'</span></div><div class="pvr"><span class="lb">Han entregado</span><span class="vl grn">'+fmt(totSal)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo neto</span><span class="vl" style="font-size:17px;color:'+(saldo<=0?'var(--grn)':'var(--red)')+'">'+fmt(saldo)+'</span></div>';
+  }
+  renderProvMovs();
+}
+function renderProvMovs(){
+  var prov=document.getElementById('fProvSel').value;
+  var evs=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) evs.push({f:S.movimientos[i].fecha,t:'e',d:S.movimientos[i]});
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) evs.push({f:S.salidas[i].fecha,t:'s',d:S.salidas[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var el=document.getElementById('tblProv');
+  if(!evs.length){el.innerHTML='<div class="empty">Sin movimientos para '+prov+'</div>';return;}
+  var acum=0;
+  var h='<table><thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Debe/Haber</th><th>Saldo Acum.</th></tr></thead><tbody>';
+  for(var i=0;i<evs.length;i++){
+    var ev=evs[i];
+    if(ev.t==='e'){
+      var m=ev.d; acum+=m.retOfic; var c=null;
+      for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}
+      h+='<tr><td>'+m.fecha+'</td><td>'+m.titulo+' - '+(c?c.nombre:'?')+'</td><td><span class="bdg bin">Entrada</span></td><td style="color:var(--red)">+'+fmt(m.retOfic)+'</td><td style="color:'+(acum>0?'var(--red)':'var(--grn)')+'">'+fmt(acum)+'</td></tr>';
+    } else {
+      var s=ev.d; acum-=s.montoTotal; var c=null;
+      for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===s.cid){c=S.clientes[j];break;}
+      h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Entrega')+' - '+(c?c.nombre:'?')+'</td><td>'+tBdg(s.tipo)+'</td><td style="color:var(--grn)">-'+fmt(s.montoTotal)+'</td><td style="color:'+(acum<=0?'var(--grn)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';
+    }
+  }
+  el.innerHTML=h+'</tbody></table>';
+}
+function copyProvEC(){
+  var prov=document.getElementById('fProvSel').value;
+  var evs=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) evs.push({f:S.movimientos[i].fecha,t:'e',d:S.movimientos[i]});
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) evs.push({f:S.salidas[i].fecha,t:'s',d:S.salidas[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var acum=0;
+  var txt='EC PROVEEDOR '+prov+'\n====================\nFecha: '+today()+'\n====================\n\n';
+  for(var i=0;i<evs.length;i++){
+    var ev=evs[i];
+    if(ev.t==='e'){var m=ev.d;acum+=m.retOfic;var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}txt+=m.fecha+' - '+m.titulo+' ('+(c?c.nombre:'?')+')\n  Cargo: +'+fmt(m.retOfic)+' - Saldo: '+fmt(acum)+'\n\n';}
+    else{var s=ev.d;acum-=s.montoTotal;txt+=s.fecha+' - '+(s.ref||'Entrega')+'\n  Haber: -'+fmt(s.montoTotal)+' - Saldo: '+fmt(acum)+'\n\n';}
+  }
+  txt+='====================\nSaldo: '+fmt(getSaldoProv(prov))+'\n====================';
+  navigator.clipboard.writeText(txt).then(function(){alert('Copiado EC '+prov);});
+}
+
+function renderCuentas(){
+  var ct=getCuentas();
+  var ckExt=0;
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].tipo==='extranjero') ckExt+=(S.salidas[i].comExtM||0);
+  document.getElementById('cRLC').innerHTML='<div class="ct">RLC</div><div class="pvr"><span class="lb">Acumulado</span><span class="vl blu">'+fmt(ct.rlcB)+'</span></div><div class="pvr"><span class="lb">Retirado</span><span class="vl red">'+fmt(ct.rlcS)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo</span><span class="vl blu" style="font-size:17px">'+fmt(ct.rlc)+'</span></div>';
+  document.getElementById('cRecup').innerHTML='<div class="ct">Recuperacion (inventario)</div><div class="pvr"><span class="lb">Acumulado</span><span class="vl blu">'+fmt(ct.recB)+'</span></div><div class="pvr"><span class="lb">Retirado</span><span class="vl red">'+fmt(ct.recS)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo (hoyo tapandose)</span><span class="vl blu" style="font-size:17px">'+fmt(ct.rec)+'</span></div>';
+  document.getElementById('cCK').innerHTML='<div class="ct">CK -- Mi Ganancia</div><div class="pvr"><span class="lb">Ganancia ops</span><span class="vl gld">'+fmt(ct.ckB-ckExt)+'</span></div><div class="pvr"><span class="lb">Com. Extranjero</span><span class="vl pur">'+fmt(ckExt)+'</span></div><div class="pvr"><span class="lb">Retirado</span><span class="vl red">'+fmt(ct.ckS)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo</span><span class="vl gld" style="font-size:17px">'+fmt(ct.ck)+'</span></div>';
+  var items=[];
+  for(var i=0;i<S.movimientos.length;i++){var m=S.movimientos[i];items.push({f:m.fecha,c:'RLC',l:m.titulo,v:m.rlc});items.push({f:m.fecha,c:'Rec',l:m.titulo,v:m.rec});items.push({f:m.fecha,c:'CK',l:m.titulo,v:m.ck});}
+  for(var i=0;i<S.salidas.length;i++){var s=S.salidas[i];if(s.tipo==='extranjero'&&s.comExtM)items.push({f:s.fecha,c:'CK',l:'Com.Ext - '+(s.ref||''),v:s.comExtM});}
+  items.sort(function(a,b){return b.f.localeCompare(a.f);});
+  if(items.length>40) items=items.slice(0,40);
+  var el=document.getElementById('tblInt');
+  if(!items.length){el.innerHTML='<div class="empty">Sin datos</div>';return;}
+  var h='<table><thead><tr><th>Fecha</th><th>Concepto</th><th>Cuenta</th><th>Monto</th></tr></thead><tbody>';
+  for(var i=0;i<items.length;i++){var col=items[i].c==='CK'?'var(--acc2)':'var(--blu)';h+='<tr><td>'+items[i].f+'</td><td>'+items[i].l+'</td><td style="color:'+col+'">'+items[i].c+'</td><td style="color:'+col+'">'+fmt(items[i].v)+'</td></tr>';}
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function renderECSelects(){
+  var sel=document.getElementById('ecCliSel'); var cur=sel.value;
+  sel.innerHTML='<option value="">-- Seleccionar --</option>';
+  for(var i=0;i<S.clientes.length;i++) sel.innerHTML+='<option value="'+S.clientes[i].id+'">'+S.clientes[i].nombre+'</option>';
+  if(cur){sel.value=cur;renderEC();}
+}
+function renderEC(){
+  var cid=parseInt(document.getElementById('ecCliSel').value);
+  var el=document.getElementById('ecCliCont');
+  if(!cid){el.innerHTML='<div class="empty">Selecciona un cliente</div>';return;}
+  var cli=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){cli=S.clientes[i];break;}
+  var sub=null; for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===cli.subId){sub=S.subagentes[i];break;}
+  var movs=[],sals=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) sals.push(S.salidas[i]);
+  movs.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  sals.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var sp=getSaldoCli(cid);
+  var totDep=0,totRet=0,totSal=0;
+  for(var i=0;i<movs.length;i++){totDep+=movs[i].importe;totRet+=movs[i].retCli;}
+  for(var i=0;i<sals.length;i++) totSal+=sals[i].montoCli;
+  var evs=[];
+  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'e',d:movs[i]});
+  for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:'s',d:sals[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var h='<div class="ech"><div><div class="ect">'+cli.nombre+'</div><div class="ecm">'+cli.com+'% '+(cli.tipo==='iva'?'antes IVA':'directo')+(sub?' - Sub: '+sub.nombre:'')+' - '+today()+'</div></div><div class="ecs"><div class="ecsl">Saldo a Favor</div><div class="ecsv" style="color:'+(sp>=0?'var(--grn)':'var(--red)')+'">'+fmt(sp)+'</div></div></div>';
+  h+='<div class="kg" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px"><div class="kpi"><div class="kl">Total Depositado</div><div class="kv">'+fmt(totDep)+'</div></div><div class="kpi"><div class="kl">Total Retorno</div><div class="kv grn">'+fmt(totRet)+'</div></div><div class="kpi"><div class="kl">Total Salidas</div><div class="kv red">'+fmt(totSal)+'</div></div><div class="kpi"><div class="kl">Saldo</div><div class="kv '+(sp>=0?'grn':'red')+'">'+fmt(sp)+'</div></div></div>';
+  if(evs.length){
+    var acum=0;
+    h+='<div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Cargo/Abono</th><th>Saldo Acum.</th></tr></thead><tbody>';
+    for(var i=0;i<evs.length;i++){
+      var ev=evs[i];
+      if(ev.t==='e'){
+        var m=ev.d; acum+=m.saldoCli;
+        h+='<tr><td>'+m.fecha+'</td><td>'+m.titulo+'</td><td><span class="bdg bin">Entrada</span></td><td style="color:var(--grn)">+'+fmt(m.saldoCli)+'</td><td style="color:var(--acc2)">'+fmt(acum)+'</td></tr>';
+      } else {
+        var s=ev.d;
+        if(s.tipo==='extranjero'&&s.comExtM){
+          h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Trans. Extranjero')+'</td><td>'+tBdg('extranjero')+'</td><td style="color:var(--red)">-'+fmt(s.montoTotal)+'</td><td style="color:var(--acc2)">'+fmt(acum-s.montoTotal)+'</td></tr>';
+          acum-=s.montoCli;
+          h+='<tr><td>'+s.fecha+'</td><td>Comision Trans. Extranjero ('+s.comExt+'%)</td><td><span class="bdg bxt">Com.Ext</span></td><td style="color:var(--red)">-'+fmt(s.comExtM)+'</td><td style="color:'+(acum>=0?'var(--acc2)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';
+        } else {
+          acum-=s.montoCli;
+          h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Salida')+'</td><td>'+tBdg(s.tipo)+(s.transito?' [T]':'')+'</td><td style="color:var(--red)">-'+fmt(s.montoCli)+'</td><td style="color:'+(acum>=0?'var(--acc2)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';
+        }
+      }
+    }
+    h+='</tbody></table></div>';
+  } else { h+='<div class="empty">Sin movimientos</div>'; }
+  h+='<div class="fe"><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
+  el.innerHTML=h;
+}
+
+function renderECSub(){
+  var sid=parseInt(document.getElementById('ecSubSel').value);
+  var el=document.getElementById('ecSubCont');
+  if(!sid){el.innerHTML='<div class="empty">Selecciona un subagente</div>';return;}
+  var sub=null; for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===sid){sub=S.subagentes[i];break;}
+  var cids={};
+  for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].subId==sid) cids[S.clientes[i].id]=true;
+  var movs=[],pagos=[];
+  for(var i=0;i<S.movimientos.length;i++) if(cids[S.movimientos[i].cid]) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].saId==sid) pagos.push(S.salidas[i]);
+  movs.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  pagos.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var saldo=getSaldoSub(sid);
+  var evs=[];
+  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'c',d:movs[i]});
+  for(var i=0;i<pagos.length;i++) evs.push({f:pagos[i].fecha,t:'p',d:pagos[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var acum=0;
+  var h='<div class="ech"><div><div class="ect">'+sub.nombre+'</div><div class="ecm">Subagente - '+today()+'</div></div><div class="ecs"><div class="ecsl">Saldo a Pagar</div><div class="ecsv" style="color:'+(saldo>=0?'var(--grn)':'var(--red)')+'">'+fmt(saldo)+'</div></div></div>';
+  if(evs.length){
+    h+='<div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Cargo/Abono</th><th>Acum.</th></tr></thead><tbody>';
+    for(var i=0;i<evs.length;i++){
+      var ev=evs[i];
+      if(ev.t==='c'){var m=ev.d;acum+=m.comSub;var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}h+='<tr><td>'+m.fecha+'</td><td>Com - '+(c?c.nombre:'?')+' ('+m.titulo+')</td><td style="color:var(--grn)">+'+fmt(m.comSub)+'</td><td style="color:var(--acc2)">'+fmt(acum)+'</td></tr>';}
+      else{var s=ev.d;acum-=s.montoCli;h+='<tr><td>'+s.fecha+'</td><td>'+(s.ref||'Pago')+'</td><td style="color:var(--red)">-'+fmt(s.montoCli)+'</td><td style="color:'+(acum>=0?'var(--acc2)':'var(--red)')+'">'+fmt(acum)+'</td></tr>';}
+    }
+    h+='</tbody></table></div>';
+  } else { h+='<div class="empty">Sin movimientos</div>'; }
+  h+='<div class="fe"><button class="btn bp" onclick="genECSub('+sid+')">Copiar WhatsApp</button></div>';
+  el.innerHTML=h;
+}
+
+function genECWA(cid){
+  var cli=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){cli=S.clientes[i];break;}
+  var movs=[],sals=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) sals.push(S.salidas[i]);
+  movs.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  sals.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var evs=[];
+  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'e',d:movs[i]});
+  for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:'s',d:sals[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var acum=0;
+  var txt='ESTADO DE CUENTA\n====================\nCliente: '+cli.nombre+'\nFecha: '+today()+'\n====================\n\n';
+  for(var i=0;i<evs.length;i++){
+    var ev=evs[i];
+    if(ev.t==='e'){var m=ev.d;acum+=m.saldoCli;txt+=m.fecha+' - '+m.titulo+'\n  Deposito: '+fmt(m.importe)+'\n  Retorno: '+fmt(m.retCli)+'\n'+(m.trans?'  Trans incl: -'+fmt(m.trans)+'\n':'')+'  Acum: '+fmt(acum)+'\n\n';}
+    else{
+      var s=ev.d;
+      if(s.tipo==='extranjero'&&s.comExtM){acum-=s.montoCli;txt+=s.fecha+' - Trans. Extranjero\n'+(s.ref?'  Ref: '+s.ref+'\n':'')+'  Transferencia: -'+fmt(s.montoTotal)+'\n  Comision Extranjero ('+s.comExt+'%): -'+fmt(s.comExtM)+'\n  Total cargo: -'+fmt(s.montoCli)+'\n  Acum: '+fmt(acum)+'\n\n';}
+      else{acum-=s.montoCli;var tp=s.tipo==='transferencia'?'Transferencia':s.tipo==='efectivo'?(s.transito?'Efectivo (Transito)':'Efectivo'):'Extranjero';txt+=s.fecha+' - '+tp+'\n'+(s.ref?'  Ref: '+s.ref+'\n':'')+'  -'+fmt(s.montoCli)+' - Acum: '+fmt(acum)+'\n\n';}
+    }
+  }
+  txt+='====================\nSALDO: '+fmt(getSaldoCli(cid))+'\n====================';
+  document.getElementById('moECtit').textContent='EC - '+cli.nombre;
+  document.getElementById('moECtxt').textContent=txt;
+  document.getElementById('moEC').classList.add('on');
+}
+function genECSub(sid){
+  var sub=null; for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===sid){sub=S.subagentes[i];break;}
+  var cids={}; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].subId==sid) cids[S.clientes[i].id]=true;
+  var movs=[],pagos=[];
+  for(var i=0;i<S.movimientos.length;i++) if(cids[S.movimientos[i].cid]) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].saId==sid) pagos.push(S.salidas[i]);
+  movs.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  pagos.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
+  var evs=[];
+  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'c',d:movs[i]});
+  for(var i=0;i<pagos.length;i++) evs.push({f:pagos[i].fecha,t:'p',d:pagos[i]});
+  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
+  var acum=0;
+  var txt='EC SUBAGENTE\n====================\n'+sub.nombre+'\nFecha: '+today()+'\n====================\n\n';
+  for(var i=0;i<evs.length;i++){
+    var ev=evs[i];
+    if(ev.t==='c'){var m=ev.d;acum+=m.comSub;var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}txt+=m.fecha+' - '+(c?c.nombre:'?')+'\n  +'+fmt(m.comSub)+' - Acum: '+fmt(acum)+'\n\n';}
+    else{var s=ev.d;acum-=s.montoCli;txt+=s.fecha+'\n  -'+fmt(s.montoCli)+' - Acum: '+fmt(acum)+'\n\n';}
+  }
+  txt+='====================\nSALDO: '+fmt(getSaldoSub(sid))+'\n====================';
+  document.getElementById('moECtit').textContent='Sub: '+sub.nombre;
+  document.getElementById('moECtxt').textContent=txt;
+  document.getElementById('moEC').classList.add('on');
+}
+function copyEC(){ navigator.clipboard.writeText(document.getElementById('moECtxt').textContent).then(function(){alert('Copiado!');}); }
+
+function renderArqueo(){
+  var fecha=document.getElementById('arqueoF').value||today();
+  var movs=[],sals=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].fecha===fecha) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].fecha===fecha) sals.push(S.salidas[i]);
+  var el=document.getElementById('arqueoCont');
+  if(!movs.length&&!sals.length){el.innerHTML='<div class="card"><div class="empty">Sin movimientos para '+fecha+'</div></div>';return;}
+  var t={dep:0,ofic:0,cli:0,rlc:0,rec:0,ck:0};
+  for(var i=0;i<movs.length;i++){t.dep+=movs[i].importe;t.ofic+=movs[i].retOfic;t.cli+=movs[i].saldoCli;t.rlc+=movs[i].rlc;t.rec+=movs[i].rec;t.ck+=movs[i].ck;}
+  var totSal=0,ckExt=0;
+  for(var i=0;i<sals.length;i++){totSal+=sals[i].montoCli;if(sals[i].tipo==='extranjero')ckExt+=(sals[i].comExtM||0);}
+  var ct=getCuentas();
+  var pDia={};
+  for(var i=0;i<movs.length;i++){if(!pDia[movs[i].prov])pDia[movs[i].prov]={e:0,s:0};pDia[movs[i].prov].e+=movs[i].retOfic;}
+  for(var i=0;i<sals.length;i++){if(!pDia[sals[i].prov])pDia[sals[i].prov]={e:0,s:0};pDia[sals[i].prov].s+=sals[i].montoTotal;}
+  var h='<div class="kg" style="grid-template-columns:repeat(4,1fr)"><div class="kpi"><div class="kl">Total Entradas</div><div class="kv">'+fmt(t.dep)+'</div></div><div class="kpi"><div class="kl">A Pagar Oficina</div><div class="kv red">'+fmt(t.ofic)+'</div></div><div class="kpi"><div class="kl">Saldo Clientes dia</div><div class="kv grn">'+fmt(t.cli)+'</div></div><div class="kpi"><div class="kl">CK dia</div><div class="kv gld">'+fmt(t.ck+ckExt)+'</div></div></div>';
+  h+='<div class="kg" style="grid-template-columns:repeat(4,1fr)"><div class="kpi"><div class="kl">Salidas dia</div><div class="kv org">'+fmt(totSal)+'</div></div><div class="kpi"><div class="kl">RLC dia</div><div class="kv blu">'+fmt(t.rlc)+'</div></div><div class="kpi"><div class="kl">Recup dia</div><div class="kv blu">'+fmt(t.rec)+'</div></div><div class="kpi"><div class="kl">Com.Ext dia</div><div class="kv pur">'+fmt(ckExt)+'</div></div></div>';
+  h+='<div class="kg" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="kl">RLC acum.</div><div class="kv blu">'+fmt(ct.rlc)+'</div></div><div class="kpi"><div class="kl">Recup acum.</div><div class="kv blu">'+fmt(ct.rec)+'</div></div><div class="kpi"><div class="kl">CK acum.</div><div class="kv gld">'+fmt(ct.ck)+'</div></div></div>';
+  var pkeys=Object.keys(pDia);
+  if(pkeys.length){h+='<div class="card"><div class="ct">Proveedores del Dia</div><div class="tw"><table><thead><tr><th>Prov.</th><th>Cargo</th><th>Entregaron</th><th>Neto</th></tr></thead><tbody>';for(var i=0;i<pkeys.length;i++){var p=pkeys[i];var n=pDia[p].e-pDia[p].s;h+='<tr><td>'+pBdg(p)+'</td><td style="color:var(--red)">'+fmt(pDia[p].e)+'</td><td style="color:var(--grn)">'+fmt(pDia[p].s)+'</td><td style="color:'+(n>0?'var(--red)':'var(--grn)')+'">'+fmt(n)+'</td></tr>';}h+='</tbody></table></div></div>';}
+  if(movs.length){h+='<div class="card"><div class="ct">Entradas</div><div class="tw"><table><thead><tr><th>Titulo</th><th>Cliente</th><th>Prov</th><th>Deposito</th><th>Ofic.</th><th>Cli.</th><th>RLC</th><th>Rec</th><th>CK</th></tr></thead><tbody>';for(var i=0;i<movs.length;i++){var m=movs[i];var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}h+='<tr class="p'+m.prov+'"><td>'+m.titulo+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+pBdg(m.prov)+'</td><td>'+fmt(m.importe)+'</td><td style="color:var(--red)">'+fmt(m.retOfic)+'</td><td style="color:var(--grn)">'+fmt(m.retCli)+'</td><td style="color:var(--blu)">'+fmt(m.rlc)+'</td><td style="color:var(--blu)">'+fmt(m.rec)+'</td><td style="color:var(--acc2)">'+fmt(m.ck)+'</td></tr>';}h+='</tbody></table></div></div>';}
+  if(sals.length){h+='<div class="card"><div class="ct">Salidas</div><div class="tw"><table><thead><tr><th>Cliente</th><th>Tipo</th><th>Prov</th><th>Referencia</th><th>Monto</th></tr></thead><tbody>';for(var i=0;i<sals.length;i++){var s=sals[i];var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===s.cid){c=S.clientes[j];break;}h+='<tr><td>'+(c?c.nombre:'?')+'</td><td>'+tBdg(s.tipo)+(s.transito?' [T]':'')+'</td><td>'+pBdg(s.prov)+'</td><td style="text-align:left">'+(s.ref||'--')+'</td><td style="color:var(--org)">'+fmt(s.montoCli)+'</td></tr>';}h+='</tbody></table></div></div>';}
+  el.innerHTML=h;
+}
+function copyArqueo(){
+  var fecha=document.getElementById('arqueoF').value||today();
+  var movs=[],sals=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].fecha===fecha) movs.push(S.movimientos[i]);
+  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].fecha===fecha) sals.push(S.salidas[i]);
+  if(!movs.length&&!sals.length){alert('Sin movimientos ese dia');return;}
+  var t={dep:0,ofic:0,cli:0,rlc:0,rec:0,ck:0};
+  for(var i=0;i<movs.length;i++){t.dep+=movs[i].importe;t.ofic+=movs[i].retOfic;t.cli+=movs[i].saldoCli;t.rlc+=movs[i].rlc;t.rec+=movs[i].rec;t.ck+=movs[i].ck;}
+  var totSal=0,ckExt=0;
+  for(var i=0;i<sals.length;i++){totSal+=sals[i].montoCli;if(sals[i].tipo==='extranjero')ckExt+=(sals[i].comExtM||0);}
+  var ct=getCuentas();
+  var txt='ARQUEO '+fecha+'\n====================\n'+'Entradas: '+movs.length+'  Salidas: '+sals.length+'\nTotal Entrada:   '+fmt(t.dep)+'\nA Pagar Oficina: '+fmt(t.ofic)+'\nSaldo Clientes:  '+fmt(t.cli)+'\nSalidas Dia:     '+fmt(totSal)+'\nRLC dia:         '+fmt(t.rlc)+'\nRecup dia:       '+fmt(t.rec)+'\nCom.Ext dia:     '+fmt(ckExt)+'\n====================\nCK DIA: '+fmt(t.ck+ckExt)+'\nRLC acum: '+fmt(ct.rlc)+'\nRecup acum: '+fmt(ct.rec)+'\nCK acum: '+fmt(ct.ck)+'\n====================';
+  navigator.clipboard.writeText(txt).then(function(){alert('Arqueo copiado');});
+}
+
+function renderDashboard(){
+  var ct=getCuentas();
+  var totCli=0,totSub=0;
+  for(var i=0;i<S.clientes.length;i++){var s=getSaldoCli(S.clientes[i].id);if(s>0)totCli+=s;}
+  for(var i=0;i<S.subagentes.length;i++){var s=getSaldoSub(S.subagentes[i].id);if(s>0)totSub+=s;}
+  var totDebo=totCli+totSub+ct.rlc+ct.ck;
+  var sL5=getSaldoProv('L5'),sL6=getSaldoProv('L6'),sL7=getSaldoProv('L7');
+  var efDisp=0,efTrn=0;
+  for(var i=0;i<S.efectivos.length;i++){if(S.efectivos[i].estado==='recibido')efDisp+=S.efectivos[i].monto;else efTrn+=S.efectivos[i].monto;}
+  var semItems=[
+    {l:'L5',v:sL5,s:sL5>0?'Pendiente entregar':'Cuadrado',cls:sL5>0?'sr':'sg'},
+    {l:'L6',v:sL6,s:sL6>0?'Pendiente entregar':'Cuadrado',cls:sL6>0?'sr':'sg'},
+    {l:'L7',v:sL7,s:sL7>0?'Pendiente entregar':'Cuadrado',cls:sL7>0?'sr':'sg'},
+    {l:'Efectivo Disponible',v:efDisp,s:'En mano, ya recibido',cls:'sg'},
+    {l:'Efectivo en Transito',v:efTrn,s:'Solicitado, por llegar',cls:efTrn>0?'so':'sg'},
+    {l:'Total que Debo',v:totDebo,s:'Clientes+Sub+RLC+CK',cls:totDebo>0?'sr':'sg'}
+  ];
+  var semC={sg:'var(--grn)',so:'var(--org)',sr:'var(--red)'};
+  var semH='';
+  for(var i=0;i<semItems.length;i++){var it=semItems[i];semH+='<div class="si '+it.cls+'"><div class="sl">'+it.l+'</div><div class="sv" style="color:'+semC[it.cls]+'">'+fmt(Math.abs(it.v))+'</div><div class="ss">'+it.s+'</div></div>';}
+  document.getElementById('semaforo').innerHTML=semH;
+  var hoy=today();
+  var ckHoy=0,totDep=0,totSalidas=0;
+  for(var i=0;i<S.movimientos.length;i++){totDep+=S.movimientos[i].importe;if(S.movimientos[i].fecha===hoy)ckHoy+=S.movimientos[i].ck;}
+  for(var i=0;i<S.salidas.length;i++) totSalidas+=S.salidas[i].montoCli;
+  document.getElementById('kpiGrid').innerHTML='<div class="kpi"><div class="kl">Operaciones</div><div class="kv">'+S.movimientos.length+'</div></div><div class="kpi"><div class="kl">Vol. Depositado</div><div class="kv">'+fmt(totDep)+'</div></div><div class="kpi"><div class="kl">Saldo Clientes</div><div class="kv grn">'+fmt(totCli)+'</div></div><div class="kpi"><div class="kl">Total Salidas</div><div class="kv org">'+fmt(totSalidas)+'</div></div><div class="kpi"><div class="kl">CK Acumulado</div><div class="kv gld">'+fmt(ct.ck)+'</div></div><div class="kpi"><div class="kl">RLC Saldo</div><div class="kv blu">'+fmt(ct.rlc)+'</div></div><div class="kpi"><div class="kl">Recup Saldo</div><div class="kv blu">'+fmt(ct.rec)+'</div></div><div class="kpi"><div class="kl">CK Hoy</div><div class="kv gld">'+fmt(ckHoy)+'</div></div>';
+  var movRecent=S.movimientos.slice(0,6);
+  var dMovH=movRecent.length?'<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Prov</th><th>CK</th></tr></thead><tbody>':'<div class="empty">Sin entradas</div>';
+  for(var i=0;i<movRecent.length;i++){var m=movRecent[i];var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}dMovH+='<tr><td>'+m.fecha+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+pBdg(m.prov)+'</td><td style="color:var(--acc2)">'+fmt(m.ck)+'</td></tr>';}
+  if(movRecent.length) dMovH+='</tbody></table>';
+  document.getElementById('dMovs').innerHTML=dMovH;
+  var sArr=[];
+  for(var i=0;i<S.clientes.length;i++){var s=getSaldoCli(S.clientes[i].id);if(s>0)sArr.push({c:S.clientes[i],s:s});}
+  sArr.sort(function(a,b){return b.s-a.s;});
+  if(sArr.length>8)sArr=sArr.slice(0,8);
+  var dSH=sArr.length?'<table><thead><tr><th>Cliente</th><th>Saldo</th></tr></thead><tbody>':'<div class="empty">Sin saldos</div>';
+  for(var i=0;i<sArr.length;i++) dSH+='<tr><td>'+sArr[i].c.nombre+'</td><td style="color:var(--grn)">'+fmt(sArr[i].s)+'</td></tr>';
+  if(sArr.length) dSH+='</tbody></table>';
+  document.getElementById('dSaldos').innerHTML=dSH;
+  document.getElementById('dInternas').innerHTML='<div class="pvr"><span class="lb">RLC</span><span class="vl blu">'+fmt(ct.rlc)+'</span></div><div class="pvr"><span class="lb">Recuperacion</span><span class="vl blu">'+fmt(ct.rec)+'</span></div><div class="pvr"><span class="lb">CK</span><span class="vl gld">'+fmt(ct.ck)+'</span></div>';
+  var dPH='';
+  for(var i=0;i<PROVS.length;i++){var p=PROVS[i];var s=getSaldoProv(p);dPH+='<div class="pvr"><span class="lb">'+pBdg(p)+'</span><span class="vl" style="color:'+(s>0?'var(--red)':'var(--grn)')+'">'+fmt(Math.abs(s))+' '+(s>0?'^ deben':'OK')+'</span></div>';}
+  document.getElementById('dProv').innerHTML=dPH;
+  var subH=S.subagentes.length?'':'<div class="empty">Sin subagentes</div>';
+  for(var i=0;i<S.subagentes.length;i++){var s=getSaldoSub(S.subagentes[i].id);subH+='<div class="pvr"><span class="lb">'+S.subagentes[i].nombre+'</span><span class="vl" style="color:'+(s>=0?'var(--grn)':'var(--red)')+'">'+fmt(s)+'</span></div>';}
+  document.getElementById('dSub').innerHTML=subH;
+  var salRecent=S.salidas.slice(0,6);
+  var dSalH=salRecent.length?'<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Monto</th></tr></thead><tbody>':'<div class="empty">Sin salidas</div>';
+  for(var i=0;i<salRecent.length;i++){var s=salRecent[i];var c=null;for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id===s.cid){c=S.clientes[j];break;}dSalH+='<tr><td>'+s.fecha+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+tBdg(s.tipo)+'</td><td style="color:var(--org)">'+fmt(s.montoCli)+'</td></tr>';}
+  if(salRecent.length) dSalH+='</tbody></table>';
+  document.getElementById('dSal').innerHTML=dSalH;
+}
+
+// ABONOS -- efectivo recibido de clientes
+function onABCli() {
+  var cid=parseInt(document.getElementById('ab_cli').value);
+  var mnt=parseFloat(document.getElementById('ab_mnt').value)||0;
+  var disp=document.getElementById('abSaldoDisp'); var val=document.getElementById('abSaldoV');
+  var prev=document.getElementById('abPrev');
+  if(!cid){disp.classList.remove('on');prev.style.display='none';return;}
+  var saldo=getSaldoCli(cid);
+  disp.classList.add('on'); val.className=saldo>=0?'ok':'nok'; val.textContent=fmt(saldo);
+  if(mnt>0){prev.style.display='block';prev.textContent='Nuevo saldo tras abono: '+fmt(saldo+mnt);}
+  else prev.style.display='none';
+}
+function guardarAbono() {
+  var cid=parseInt(document.getElementById('ab_cli').value);
+  var mnt=parseFloat(document.getElementById('ab_mnt').value)||0;
+  var ref=document.getElementById('ab_ref').value.trim();
+  var fec=document.getElementById('ab_fec').value||today();
+  var not=document.getElementById('ab_not').value.trim();
+  if(!cid||!mnt){alert('Cliente y monto requeridos');return;}
+  // Store as a special "entrada de cliente" with type abono
+  // Add directly to movimientos as a special abono type with 0 comision
+  S.movimientos.unshift({id:Date.now(),titulo:'Abono cliente: '+(ref||'Efectivo recibido'),cid:cid,prov:'--',fecha:fec,notas:not,importe:mnt,trans:0,retOfic:0,retCli:mnt,saldoCli:mnt,rlc:0,rec:0,comSub:0,ck:0,esAbono:true});
+  saveS();
+  document.getElementById('ab_mnt').value=''; document.getElementById('ab_ref').value=''; document.getElementById('ab_not').value='';
+  document.getElementById('ab_cli').value=''; document.getElementById('abSaldoDisp').classList.remove('on');
+  document.getElementById('abPrev').style.display='none';
+  renderAbonos(); alert('Abono registrado. Saldo del cliente actualizado.');
+}
+function eliminarAbono(id) {
+  if(!confirm('Eliminar este abono?')) return;
+  var nm=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].id!==id) nm.push(S.movimientos[i]);
+  S.movimientos=nm; saveS(); renderAbonos();
+}
+function renderAbonos() {
+  var cid=document.getElementById('fABCli').value;
+  var abonos=[];
+  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].esAbono){
+    if(cid&&S.movimientos[i].cid!=cid) continue;
+    abonos.push(S.movimientos[i]);
+  }
+  var el=document.getElementById('tblAbonos');
+  if(!abonos.length){el.innerHTML='<div class="empty">Sin abonos registrados</div>';return;}
+  var h='<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Monto</th><th></th></tr></thead><tbody>';
+  for(var i=0;i<abonos.length;i++){
+    var a=abonos[i]; var c=null;
+    for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===a.cid){c=S.clientes[j];break;}
+    h+='<tr><td>'+a.fecha+'</td><td>'+(c?c.nombre:'?')+'</td><td>'+a.titulo+'</td><td style="color:var(--grn)">'+fmt(a.saldoCli)+'</td><td><button class="btn bd bsm" onclick="eliminarAbono('+a.id+')">X</button></td></tr>';
+  }
+  el.innerHTML=h+'</tbody></table>';
+}
+
+// PROYECCION DE PAGOS
+var PROY = {}; // {cid: monto_proyectado}
+function renderProyeccion() {
+  var clisConSaldo=[];
+  for(var i=0;i<S.clientes.length;i++){
+    var s=getSaldoCli(S.clientes[i].id);
+    if(s>0) clisConSaldo.push({c:S.clientes[i],saldo:s});
+  }
+  clisConSaldo.sort(function(a,b){return b.saldo-a.saldo;});
+  var totalDebo=0, totalProy=0;
+  for(var i=0;i<clisConSaldo.length;i++){
+    totalDebo+=clisConSaldo[i].saldo;
+    totalProy+=parseFloat(PROY[clisConSaldo[i].c.id]||0);
+  }
+  document.getElementById('proyTotalDebo').textContent=fmt(totalDebo);
+  document.getElementById('proyTotalProy').textContent=fmt(totalProy);
+  document.getElementById('proyRestante').textContent=fmt(totalDebo-totalProy);
+  if(!clisConSaldo.length){document.getElementById('tblProyeccion').innerHTML='<div class="empty">No hay clientes con saldo pendiente</div>';return;}
+  var h='<table><thead><tr><th>Cliente</th><th>Saldo Actual</th><th>Proyectar Pago $</th><th>Diferencia</th></tr></thead><tbody>';
+  for(var i=0;i<clisConSaldo.length;i++){
+    var item=clisConSaldo[i]; var cid=item.c.id;
+    var proyVal=PROY[cid]||'';
+    var pago=parseFloat(proyVal)||0;
+    var diff=item.saldo-pago;
+    var diffColor=diff<=0?'var(--grn)':'var(--t2)';
+    h+='<tr><td>'+item.c.nombre+'</td><td style="color:var(--grn)">'+fmt(item.saldo)+'</td>';
+    h+='<td><input type="number" style="width:140px;background:var(--s2);border:1px solid var(--bdr);color:var(--txt);padding:6px 8px;border-radius:4px;font-size:13px" placeholder="0.00" value="'+proyVal+'" oninput="PROY['+cid+']=this.value;renderProyeccion()" id="proy_'+cid+'"></td>';
+    h+='<td style="color:'+diffColor+'">'+fmt(diff)+'</td></tr>';
+  }
+  h+='</tbody></table>';
+  document.getElementById('tblProyeccion').innerHTML=h;
+}
+function limpiarProyeccion() {
+  PROY={};
+  renderProyeccion();
+}
+function ejecutarProyeccion() {
+  var items=[];
+  for(var cid in PROY){
+    var mnt=parseFloat(PROY[cid])||0;
+    if(mnt<=0) continue;
+    items.push({cid:parseInt(cid),mnt:mnt});
+  }
+  if(!items.length){alert('No hay montos proyectados');return;}
+  if(!confirm('Registrar '+items.length+' pagos en efectivo como salidas?')) return;
+  var fec=today();
+  for(var i=0;i<items.length;i++){
+    S.salidas.unshift({id:Date.now()+i,cid:items[i].cid,tipo:'efectivo',prov:'L5',montoCli:items[i].mnt,montoTotal:items[i].mnt,comExt:0,comExtM:0,transito:false,ref:'Pago proyectado',fecha:fec,notas:'Desde proyeccion',saId:0,cuentaInt:''});
+  }
+  saveS(); PROY={}; renderProyeccion(); renderDashboard();
+  alert('Salidas registradas. Revisa la pestana Salidas para ajustar detalles.');
+}
+
+function cm(id){document.getElementById(id).classList.remove('on');}
+
+document.querySelectorAll('.mo').forEach(function(m){
+  m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('on');});
+});
+
+(function init(){
+  try {
+    loadS();
+    var now=new Date();
+    document.getElementById('dateBadge').textContent=now.toLocaleDateString('es-MX',{weekday:'short',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
+    document.getElementById('f_fec').value=today();
+    document.getElementById('s_fec').value=today();
+    document.getElementById('arqueoF').value=today();
+    document.getElementById('ef_fec').value=today();
+    document.getElementById('ef_recFec').value=today();
+    var abfec=document.getElementById('ab_fec'); if(abfec) abfec.value=today();
+    populateAll();
+    renderDashboard();
+  } catch(e) { alert('Error al iniciar: '+e.message); }
+})();
+</script>
+
+</body>
+</html>
