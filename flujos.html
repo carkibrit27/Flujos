@@ -463,10 +463,13 @@ function checkPin() {
           <option value="L5">L5</option><option value="L6">L6</option><option value="L7">L7</option>
         </select>
         <button class="btn bg bsm" onclick="copyProvEC()">Copiar EC</button>
-        <button class="btn bg bsm" onclick="generarPDFProv(document.getElementById('fProvSel').value)">PDF</button>
-      </div>
-    </div>
-    <div class="tw" id="tblProv"></div>
+
+```
+  </div>
+</div>
+<div class="tw" id="tblProv"></div>
+```
+
   </div>
 </div>
 
@@ -766,6 +769,7 @@ function checkPin() {
 </div></div>
 
 <script>
+
 var S = {clientes:[],subagentes:[],movimientos:[],salidas:[],efectivos:[],transferencias:[],saldosIniciales:[],retiros:[]};
 var STORE_KEY = 'fck_v6';
 
@@ -1164,7 +1168,7 @@ function onSC() {
   if(tipo==='extranjero'&&mnt>0&&comE>0){ep.style.display='block';ep.textContent='Trans: '+fmt(mnt)+' + Comision ('+comE+'%): '+fmt(mnt*(comE/100))+' = Total cliente: '+fmt(mnt+mnt*(comE/100));}
   else ep.style.display='none';
   var total=tipo==='extranjero'?mnt+mnt*(comE/100):mnt;
-  if(total>0&&total>saldo){warn.style.display='block';warn.textContent='Total ('+fmt(total)+') supera saldo ('+fmt(saldo)+')';}
+  if(total>0&&total>saldo){warn.style.display='block';warn.textContent='ATENCION: El cliente quedara en negativo. Saldo actual: '+fmt(saldo)+' | Salida: '+fmt(total)+' | Resultado: '+fmt(saldo-total);}
   else warn.style.display='none';
 }
 function guardarSalida() {
@@ -1181,7 +1185,7 @@ function guardarSalida() {
   var saldo=getSaldoCli(cid);
   var comExtM=mnt*(comE/100);
   var montoCli=tipo==='extranjero'?mnt+comExtM:mnt;
-  if(montoCli>saldo&&!confirm('Supera saldo ('+fmt(saldo)+'). Continuar?')) return;
+  if(montoCli>saldo&&!confirm('ATENCION: El cliente quedara en negativo.\n\nSaldo actual: '+fmt(saldo)+'\nSalida: '+fmt(montoCli)+'\nSaldo resultante: '+fmt(saldo-montoCli)+'\n\nEsta operacion esta autorizada?')) return;
   S.salidas.unshift({id:Date.now(),cid:cid,tipo:tipo,prov:prov,montoCli:montoCli,montoTotal:mnt,comExt:comE,comExtM:comExtM,transito:trn,ref:ref,fecha:fec,notas:not,saId:0,cuentaInt:''});
   saveS();
   var flds=['s_mnt','s_ref','s_not','s_comExt'];
@@ -1386,7 +1390,7 @@ function renderProveedores(){
     var totEnt=0,debO=0,totSal=0;
     for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov){totEnt+=S.movimientos[i].importe;debO+=S.movimientos[i].retOfic;}
     for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) totSal+=S.salidas[i].montoTotal;
-    document.getElementById('p'+prov).innerHTML='<div class="ct">'+pBdg(prov)+'</div><div class="pvr"><span class="lb">Vol. Operado</span><span class="vl">'+fmt(totEnt)+'</span></div><div class="pvr"><span class="lb">Les debemos</span><span class="vl red">'+fmt(debO)+'</span></div><div class="pvr"><span class="lb">Han entregado</span><span class="vl grn">'+fmt(totSal)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo neto</span><span class="vl" style="font-size:17px;color:'+(saldo<=0?'var(--grn)':'var(--red)')+'">'+fmt(saldo)+'</span></div>';
+    document.getElementById('p'+prov).innerHTML='<div class="ct">'+pBdg(prov)+'</div><div class="pvr"><span class="lb">Vol. Operado</span><span class="vl">'+fmt(totEnt)+'</span></div><div class="pvr"><span class="lb">Te deben entregar</span><span class="vl grn">'+fmt(debO)+'</span></div><div class="pvr"><span class="lb">Han entregado</span><span class="vl org">'+fmt(totSal)+'</span></div><div class="sep"></div><div class="pvr"><span class="lb">Saldo neto</span><span class="vl" style="font-size:17px;color:'+(saldo>=0?'var(--grn)':'var(--red)')+'">'+fmt(saldo)+'</span></div>';
   }
   renderProvMovs();
 }
@@ -1518,7 +1522,7 @@ function renderEC(){
     }
     h+='</tbody></table></div>';
   } else { h+='<div class="empty">Sin movimientos</div>'; }
-  h+='<div class="fe"><button class="btn bg" onclick="generarPDF('+cid+')">Descargar PDF</button><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
+  h+='<div class="fe"><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
   el.innerHTML=h;
 }
 
@@ -1646,6 +1650,10 @@ function copyArqueo(){
   navigator.clipboard.writeText(txt).then(function(){alert('Arqueo copiado');});
 }
 
+</script>
+
+<script>
+
 function renderDashboard(){
   var ct=getCuentas();
   var totCli=0,totSub=0;
@@ -1656,9 +1664,9 @@ function renderDashboard(){
   var efDisp=0,efTrn=0;
   for(var i=0;i<S.efectivos.length;i++){if(S.efectivos[i].estado==='recibido')efDisp+=S.efectivos[i].monto;else efTrn+=S.efectivos[i].monto;}
   var semItems=[
-    {l:'L5',v:sL5,s:sL5>0?'Pendiente entregar':'Cuadrado',cls:sL5>0?'sr':'sg'},
-    {l:'L6',v:sL6,s:sL6>0?'Pendiente entregar':'Cuadrado',cls:sL6>0?'sr':'sg'},
-    {l:'L7',v:sL7,s:sL7>0?'Pendiente entregar':'Cuadrado',cls:sL7>0?'sr':'sg'},
+    {l:'L5',v:sL5,s:sL5>0?'Te deben entregar':sL5<0?'Les debes':'Cuadrado',cls:sL5>0?'sg':sL5<0?'sr':'sg'},
+    {l:'L6',v:sL6,s:sL6>0?'Te deben entregar':sL6<0?'Les debes':'Cuadrado',cls:sL6>0?'sg':sL6<0?'sr':'sg'},
+    {l:'L7',v:sL7,s:sL7>0?'Te deben entregar':sL7<0?'Les debes':'Cuadrado',cls:sL7>0?'sg':sL7<0?'sr':'sg'},
     {l:'Efectivo Disponible',v:efDisp,s:'En mano, ya recibido',cls:'sg'},
     {l:'Efectivo en Transito',v:efTrn,s:'Solicitado, por llegar',cls:efTrn>0?'so':'sg'},
     {l:'Total que Debo',v:totDebo,s:'Clientes+Sub+RLC+CK',cls:totDebo>0?'sr':'sg'}
@@ -1687,7 +1695,7 @@ function renderDashboard(){
   document.getElementById('dSaldos').innerHTML=dSH;
   document.getElementById('dInternas').innerHTML='<div class="pvr"><span class="lb">RLC</span><span class="vl blu">'+fmt(ct.rlc)+'</span></div><div class="pvr"><span class="lb">Recuperacion</span><span class="vl blu">'+fmt(ct.rec)+'</span></div><div class="pvr"><span class="lb">CK</span><span class="vl gld">'+fmt(ct.ck)+'</span></div>';
   var dPH='';
-  for(var i=0;i<PROVS.length;i++){var p=PROVS[i];var s=getSaldoProv(p);dPH+='<div class="pvr"><span class="lb">'+pBdg(p)+'</span><span class="vl" style="color:'+(s>0?'var(--red)':'var(--grn)')+'">'+fmt(Math.abs(s))+' '+(s>0?'^ deben':'OK')+'</span></div>';}
+  for(var i=0;i<PROVS.length;i++){var p=PROVS[i];var s=getSaldoProv(p);dPH+='<div class="pvr"><span class="lb">'+pBdg(p)+'</span><span class="vl" style="color:'+(s>0?'var(--grn)':s<0?'var(--red)':'var(--t2)')+'">'+(s>0?'Te deben '+fmt(s):s<0?'Les debes '+fmt(Math.abs(s)):'Cuadrado')+'</span></div>';}
   document.getElementById('dProv').innerHTML=dPH;
   var subH=S.subagentes.length?'':'<div class="empty">Sin subagentes</div>';
   for(var i=0;i<S.subagentes.length;i++){var s=getSaldoSub(S.subagentes[i].id);subH+='<div class="pvr"><span class="lb">'+S.subagentes[i].nombre+'</span><span class="vl" style="color:'+(s>=0?'var(--grn)':'var(--red)')+'">'+fmt(s)+'</span></div>';}
@@ -2189,181 +2197,30 @@ function guardarRetiro(){
 function guardarSaldoInicial(tipo){}
 
 
-// PDF ESTADO DE CUENTA CLIENTE
-function generarPDF(cid) {
-  var cli=null; for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){cli=S.clientes[i];break;}
-  var sub=null; if(cli) for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===cli.subId){sub=S.subagentes[i];break;}
-  var movs=[],sals=[],trns=[];
-  for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].cid===cid) movs.push(S.movimientos[i]);
-  for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].cid===cid) sals.push(S.salidas[i]);
-  for(var i=0;i<S.transferencias.length;i++){
-    var t=S.transferencias[i];
-    if((t.tipoOrig==='cliente'&&t.orig==cid)||(t.tipoDest==='cliente'&&t.dest==cid)) trns.push(t);
-  }
-  var sp = getSaldoCli(cid);
-  var totDep=0,totRet=0,totSal=0;
-  for(var i=0;i<movs.length;i++){totDep+=movs[i].importe;totRet+=movs[i].retCli;}
-  for(var i=0;i<sals.length;i++) totSal+=sals[i].montoCli;
-  var fmtN = function(n){return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0);};
-  // Build events timeline
-  var evs=[];
-  for(var i=0;i<movs.length;i++) evs.push({f:movs[i].fecha,t:'e',d:movs[i]});
-  for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:'s',d:sals[i]});
-  for(var i=0;i<trns.length;i++) evs.push({f:trns[i].fecha,t:'tr',d:trns[i]});
-  evs.sort(function(a,b){return a.f.localeCompare(b.f);});
-  var acum=0, rows='';
-  for(var i=0;i<evs.length;i++){
-    var ev=evs[i];
-    if(ev.t==='e'){
-      var m=ev.d; acum+=m.saldoCli;
-      var esTipo = m.esAbono ? 'Abono Efectivo' : (m.soloComision ? 'Solo Comision' : 'Entrada');
-      var refTxt = m.titulo||'';
-      rows+='<tr class="re"><td>'+m.fecha+'</td><td>'+refTxt+(m.factura?'<br><small style="color:#999">Factura: '+fmtN(m.factura)+'</small>':'')+'</td><td>'+esTipo+'</td><td style="text-align:right;color:#2d7a52;font-weight:600">+'+fmtN(m.saldoCli)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum)+'</td></tr>';
-    } else if(ev.t==='s'){
-      var s=ev.d;
-      if(s.tipo==='extranjero'&&s.comExtM){
-        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>'+(s.ref||'Trans. Extranjero')+'</td><td>Trans. Extran.</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.montoTotal)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum-s.montoTotal)+'</td></tr>';
-        acum-=s.montoCli;
-        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>Comision Extranjero ('+s.comExt+'%)</td><td>Com. Extran.</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.comExtM)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
-      } else {
-        acum-=s.montoCli;
-        var tp = s.tipo==='transferencia'?'Transferencia':s.tipo==='efectivo'?(s.transito?'Efec. Transito':'Efectivo'):'Extranjero';
-        rows+='<tr class="rs"><td>'+s.fecha+'</td><td>'+(s.ref||'Salida')+'</td><td>'+tp+'</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(s.montoCli)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
-      }
-    } else {
-      var t=ev.d;
-      if(t.tipoOrig==='cliente'&&t.orig==cid){
-        acum-=t.monto;
-        rows+='<tr class="rs"><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+'</td><td>Transf. a '+(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return t.tipoDest.toUpperCase();})(t.dest)+'</td><td style="text-align:right;color:#c0392b;font-weight:600">-'+fmtN(t.monto)+'</td><td style="text-align:right;color:'+(acum>=0?'#8a6e00':'#c0392b')+';font-weight:600">'+fmtN(acum)+'</td></tr>';
-      } else {
-        acum+=t.monto;
-        rows+='<tr class="re"><td>'+t.fecha+'</td><td>'+(t.ref||'Transf. Saldo')+'</td><td>Recibido de '+(function(id){for(var j=0;j<S.clientes.length;j++)if(S.clientes[j].id==id)return S.clientes[j].nombre;return t.tipoOrig.toUpperCase();})(t.orig)+'</td><td style="text-align:right;color:#2d7a52;font-weight:600">+'+fmtN(t.monto)+'</td><td style="text-align:right;color:#8a6e00;font-weight:600">'+fmtN(acum)+'</td></tr>';
-      }
-    }
-  }
-  var sc = sp>=0?'#2d7a52':'#c0392b';
-  var docID = 'EC-'+String(cid).slice(-4)+'-'+today().replace(/-/g,'');
-  var css = '*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;background:#fff;padding:20px}'+
-    '.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:3px solid #1a4a8a;margin-bottom:14px}'+
-    '.hdr-left{display:flex;align-items:center;gap:14px}.brand{font-size:18pt;font-weight:800;color:#111}.brand span{color:#c9a84c}'+
-    '.hdr-r{text-align:right}.did{font-size:9pt;font-weight:700;color:#1a4a8a}.ddate{font-size:8pt;color:#888;margin-top:2px}'+
-    'h1{font-size:18pt;font-weight:700;color:#111}.sub{font-size:8pt;color:#888;margin-top:2px}'+
-    '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}'+
-    '.kpi{border:1px solid #ddd;border-radius:5px;padding:8px 10px;background:#fafafa}'+
-    '.kl{font-size:7pt;text-transform:uppercase;letter-spacing:.05em;color:#aaa;margin-bottom:3px}.kv{font-size:10pt;font-weight:700}'+
-    '.st{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a4a8a;margin-bottom:5px;margin-top:12px}'+
-    'table{width:100%;border-collapse:collapse;font-size:8.5pt}thead tr{background:#1a4a8a;color:#fff}'+
-    'th{padding:6px 7px;text-align:left;font-size:7.5pt}tbody tr{border-bottom:1px solid #f0f0f0}tbody tr:nth-child(even){background:#fafafa}'+
-    'td{padding:5px 7px}.re td:first-child{border-left:3px solid #4caf82}.rs td:first-child{border-left:3px solid #e05c5c}'+
-    '.fbox{margin-top:14px;border:2px solid #1a4a8a;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#f0f5ff}'+
-    '.fl{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888}'+
-    '.fl small{display:block;font-weight:400;font-size:7pt;margin-top:2px;color:#bbb;text-transform:none;letter-spacing:0}'+
-    '.fa{font-size:18pt;font-weight:700}.pgf{margin-top:10px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:7pt;color:#bbb}'+
-    '@media print{body{padding:0}@page{size:A4;margin:12mm 14mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  var body = '<div class="hdr"><div class="hdr-left"><div><div class="brand">Luis Corpo <span>Connect</span></div></div><div style="border-left:1px solid #ddd;padding-left:14px;margin-left:4px"><h1>'+cli.nombre+'</h1><div class="sub">'+cli.com+'% '+(cli.tipo==='iva'?'antes IVA':cli.tipo==='directo'?'directo':'inverso')+(sub?' - Sub: '+sub.nombre:'')+'</div></div></div><div class="hdr-r"><div class="did">'+docID+'</div><div class="ddate">Estado de cuenta al '+today()+'</div></div></div>'+
-    '<div class="kpis"><div class="kpi"><div class="kl">Total Depositado</div><div class="kv" style="color:#333">'+fmtN(totDep)+'</div></div><div class="kpi"><div class="kl">Total Retorno</div><div class="kv" style="color:#2d7a52">'+fmtN(totRet)+'</div></div><div class="kpi"><div class="kl">Total Salidas</div><div class="kv" style="color:#c0392b">'+fmtN(totSal)+'</div></div><div class="kpi"><div class="kl">Saldo Pendiente</div><div class="kv" style="color:'+sc+'">'+fmtN(sp)+'</div></div></div>'+
-    '<div class="st">Movimientos</div>'+
-    '<table><thead><tr><th style="width:68px">Fecha</th><th>Concepto / Referencia</th><th style="width:100px">Tipo</th><th style="width:100px;text-align:right">Cargo/Abono</th><th style="width:100px;text-align:right">Saldo Acum.</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<div class="fbox"><div class="fl">Saldo pendiente a favor<small>Generado el '+today()+' - Luis Corpo Connect - Confidencial</small></div><div class="fa" style="color:'+sc+'">'+fmtN(sp)+'</div></div>'+
-    '<div class="pgf"><span>Luis Corpo Connect - '+cli.nombre+' - '+docID+'</span><span>Confidencial</span></div>';
-  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>EC '+cli.nombre+'</title><style>'+css+'</style></head><body>'+body+'</body></html>';
 
-var enc = ‘data:text/html;charset=utf-8,’ + encodeURIComponent(html);
-var a = document.createElement(‘a’);
-a.href=enc; a.download=‘EC_’+cli.nombre.replace(/\s+/g,’*’)+’*’+today()+’.html’;
-a.style.display=‘none’; document.body.appendChild(a); a.click();
-setTimeout(function(){document.body.removeChild(a);},100);
-}
+function cm(id){document.getElementById(id).classList.remove('on');}
 
-// PDF PROVEEDOR
-function generarPDFProv(prov) {
-var fmtN=function(n){return new Intl.NumberFormat(‘es-MX’,{style:‘currency’,currency:‘MXN’}).format(n||0);};
-var ents=[],sals=[];
-for(var i=0;i<S.movimientos.length;i++) if(S.movimientos[i].prov===prov) ents.push(S.movimientos[i]);
-for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].prov===prov) sals.push(S.salidas[i]);
-ents.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
-sals.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
-var evs=[];
-for(var i=0;i<ents.length;i++) evs.push({f:ents[i].fecha,t:‘e’,d:ents[i]});
-for(var i=0;i<sals.length;i++) evs.push({f:sals[i].fecha,t:‘s’,d:sals[i]});
-evs.sort(function(a,b){return a.f.localeCompare(b.f);});
-var saldo=getSaldoProv(prov);
-var totEnt=ents.reduce(function(a,m){return a+m.retOfic;},0);
-var totSal=sals.reduce(function(a,s){return a+s.montoTotal;},0);
-var acum=0,rows=’’;
-// Add saldo inicial if exists
-for(var i=0;i<S.saldosIniciales.length;i++){
-var si=S.saldosIniciales[i];
-if(si.tipo===‘proveedor’&&si.ref===prov){
-acum+=si.monto;
-rows+=’<tr class="re"><td>’+si.fecha+’</td><td>Saldo Inicial</td><td>Inicial</td><td style="text-align:right;color:#c0392b;font-weight:600">+’+fmtN(si.monto)+’</td><td style="text-align:right;color:#8a6e00;font-weight:600">’+fmtN(acum)+’</td></tr>’;
-}
-}
-for(var i=0;i<evs.length;i++){
-var ev=evs[i];
-if(ev.t===‘e’){
-var m=ev.d; acum+=m.retOfic;
-var c=null; for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===m.cid){c=S.clientes[j];break;}
-rows+=’<tr class="re"><td>’+m.fecha+’</td><td>’+m.titulo+(c?’ - ‘+c.nombre:’’)+’</td><td>Entrada</td><td style="text-align:right;color:#c0392b;font-weight:600">+’+fmtN(m.retOfic)+’</td><td style="text-align:right;color:'+(acum>0?'#c0392b':'#2d7a52')+';font-weight:600">’+fmtN(acum)+’</td></tr>’;
-} else {
-var s=ev.d; acum-=s.montoTotal;
-var c2=null; for(var j=0;j<S.clientes.length;j++) if(S.clientes[j].id===s.cid){c2=S.clientes[j];break;}
-var tp=s.tipo===‘transferencia’?‘Transferencia’:s.tipo===‘efectivo’?‘Efectivo’:‘Extranjero’;
-rows+=’<tr class="rs"><td>’+s.fecha+’</td><td>’+(s.ref||‘Entrega’)+(c2?’ - ‘+c2.nombre:’’)+’</td><td>’+tp+’</td><td style="text-align:right;color:#2d7a52;font-weight:600">-’+fmtN(s.montoTotal)+’</td><td style="text-align:right;color:'+(acum<=0?'#2d7a52':'#c0392b')+';font-weight:600">’+fmtN(acum)+’</td></tr>’;
-}
-}
-var sc=saldo<=0?’#2d7a52’:’#c0392b’;
-var docID=‘EC-’+prov+’-’+today().replace(/-/g,’’);
-var css=’*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:9pt;color:#111;background:#fff;padding:20px}’+
-‘.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:3px solid #1a4a8a;margin-bottom:14px}’+
-‘.brand{font-size:16pt;font-weight:800;color:#111}.brand span{color:#c9a84c}’+
-‘h1{font-size:18pt;font-weight:700;color:#1a4a8a}.hdr-r{text-align:right}.did{font-size:9pt;font-weight:700;color:#1a4a8a}.ddate{font-size:8pt;color:#888;margin-top:2px}’+
-‘.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}’+
-‘.kpi{border:1px solid #ddd;border-radius:5px;padding:8px 10px;background:#fafafa}’+
-‘.kl{font-size:7pt;text-transform:uppercase;letter-spacing:.05em;color:#aaa;margin-bottom:3px}.kv{font-size:10pt;font-weight:700}’+
-‘.st{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1a4a8a;margin-bottom:5px}’+
-‘table{width:100%;border-collapse:collapse;font-size:8.5pt}thead tr{background:#1a4a8a;color:#fff}’+
-‘th{padding:6px 7px;text-align:left;font-size:7.5pt}tbody tr{border-bottom:1px solid #f0f0f0}tbody tr:nth-child(even){background:#fafafa}’+
-‘td{padding:5px 7px}.re td:first-child{border-left:3px solid #e05c5c}.rs td:first-child{border-left:3px solid #4caf82}’+
-‘.fbox{margin-top:14px;border:2px solid #1a4a8a;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#f0f5ff}’+
-‘.fl{font-size:8pt;font-weight:700;text-transform:uppercase;color:#888}.fl small{display:block;font-weight:400;font-size:7pt;margin-top:2px;color:#bbb;text-transform:none}’+
-‘.fa{font-size:18pt;font-weight:700}.pgf{margin-top:10px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:7pt;color:#bbb}’+
-‘@media print{body{padding:0}@page{size:A4;margin:12mm 14mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}’;
-var body=’<div class="hdr"><div><div class="brand">Luis Corpo <span>Connect</span></div><h1>Proveedor ‘+prov+’</h1></div><div class="hdr-r"><div class="did">’+docID+’</div><div class="ddate">Estado de cuenta al ‘+today()+’</div></div></div>’+
-‘<div class="kpis"><div class="kpi"><div class="kl">Total Cargado</div><div class="kv" style="color:#c0392b">’+fmtN(totEnt)+’</div></div><div class="kpi"><div class="kl">Total Entregado</div><div class="kv" style="color:#2d7a52">’+fmtN(totSal)+’</div></div><div class="kpi"><div class="kl">Saldo Neto</div><div class="kv" style="color:'+sc+'">’+fmtN(saldo)+’</div></div></div>’+
-‘<div class="st">Movimientos</div>’+
-‘<table><thead><tr><th style="width:68px">Fecha</th><th>Concepto</th><th style="width:100px">Tipo</th><th style="width:100px;text-align:right">Debe/Haber</th><th style="width:100px;text-align:right">Saldo Acum.</th></tr></thead><tbody>’+rows+’</tbody></table>’+
-‘<div class="fbox"><div class="fl">Saldo neto con proveedor ‘+prov+’<small>Generado el ‘+today()+’ - Luis Corpo Connect</small></div><div class="fa" style="color:'+sc+'">’+fmtN(saldo)+’</div></div>’+
-‘<div class="pgf"><span>Luis Corpo Connect - Proveedor ‘+prov+’ - ‘+docID+’</span><span>Confidencial</span></div>’;
-var html=’<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>EC Proveedor ‘+prov+’</title><style>’+css+’</style></head><body>’+body+’</body></html>’;
-var enc=‘data:text/html;charset=utf-8,’+encodeURIComponent(html);
-var a=document.createElement(‘a’);
-a.href=enc; a.download=‘EC_Proveedor_’+prov+’_’+today()+’.html’;
-a.style.display=‘none’; document.body.appendChild(a); a.click();
-setTimeout(function(){document.body.removeChild(a);},100);
-}
 
-function cm(id){document.getElementById(id).classList.remove(‘on’);}
-
-document.querySelectorAll(’.mo’).forEach(function(m){
-m.addEventListener(‘click’,function(e){if(e.target===m)m.classList.remove(‘on’);});
+document.querySelectorAll('.mo').forEach(function(m){
+  m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('on');});
 });
 
 (function init(){
-try {
-loadS();
-var now=new Date();
-document.getElementById(‘dateBadge’).textContent=now.toLocaleDateString(‘es-MX’,{weekday:‘short’,year:‘numeric’,month:‘short’,day:‘numeric’}).toUpperCase();
-document.getElementById(‘f_fec’).value=today();
-document.getElementById(‘s_fec’).value=today();
-document.getElementById(‘arqueoF’).value=today();
-document.getElementById(‘ef_fec’).value=today();
-document.getElementById(‘ef_recFec’).value=today();
-var abfec=document.getElementById(‘ab_fec’); if(abfec) abfec.value=today();
-populateAll();
-renderDashboard();
-} catch(e) { alert(’Error al iniciar: ’+e.message); }
+  try {
+    loadS();
+    var now=new Date();
+    document.getElementById('dateBadge').textContent=now.toLocaleDateString('es-MX',{weekday:'short',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
+    document.getElementById('f_fec').value=today();
+    document.getElementById('s_fec').value=today();
+    document.getElementById('arqueoF').value=today();
+    document.getElementById('ef_fec').value=today();
+    document.getElementById('ef_recFec').value=today();
+    var abfec=document.getElementById('ab_fec'); if(abfec) abfec.value=today();
+    populateAll();
+    renderDashboard();
+  } catch(e) { alert('Error al iniciar: '+e.message); }
 })();
+
 </script>
 
 </body>
