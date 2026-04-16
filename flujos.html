@@ -176,7 +176,8 @@ function updateDots() {
 }
 function checkPin() {
   if(pinEntry === PIN_CORRECT) {
-    document.getElementById('pinScreen').style.display = 'none';
+    var ps = document.getElementById('pinScreen');
+    ps.parentNode.removeChild(ps);
   } else {
     pinAttempts++;
     pinEntry = '';
