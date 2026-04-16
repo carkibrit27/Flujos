@@ -114,6 +114,83 @@ tr:hover td{background:var(--s2)}
 </head>
 <body>
 
+<!-- PIN SCREEN -->
+
+<div id="pinScreen" style="position:fixed;inset:0;background:#0e0e0f;z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center;padding:40px 30px;background:#161618;border:1px solid #2a2a2e;border-radius:16px;width:90%;max-width:340px">
+    <div style="font-size:18px;font-weight:800;color:#f0ede8;margin-bottom:4px">Luis Corpo <span style="color:#c9a84c">Connect</span></div>
+    <div style="font-size:12px;color:#5a5855;margin-bottom:28px;letter-spacing:.05em;text-transform:uppercase">Acceso Privado</div>
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:20px" id="pinDots">
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d0"></div>
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d1"></div>
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d2"></div>
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d3"></div>
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d4"></div>
+      <div style="width:14px;height:14px;border-radius:50%;border:2px solid #2a2a2e;background:transparent" id="d5"></div>
+    </div>
+    <div id="pinMsg" style="font-size:12px;color:#e05c5c;min-height:18px;margin-bottom:16px"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto">
+      <button onclick="pinKey('1')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">1</button>
+      <button onclick="pinKey('2')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">2</button>
+      <button onclick="pinKey('3')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">3</button>
+      <button onclick="pinKey('4')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">4</button>
+      <button onclick="pinKey('5')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">5</button>
+      <button onclick="pinKey('6')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">6</button>
+      <button onclick="pinKey('7')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">7</button>
+      <button onclick="pinKey('8')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">8</button>
+      <button onclick="pinKey('9')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">9</button>
+      <button onclick="pinDel()" style="background:#1e1e21;border:1px solid #2a2a2e;color:#9e9b96;font-size:14px;padding:16px;border-radius:10px;cursor:pointer">DEL</button>
+      <button onclick="pinKey('0')" style="background:#1e1e21;border:1px solid #2a2a2e;color:#f0ede8;font-size:20px;font-weight:600;padding:16px;border-radius:10px;cursor:pointer">0</button>
+      <button onclick="pinKey('')" style="background:transparent;border:none;cursor:default"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PIN_CORRECT = '010203';
+var pinEntry = '';
+var pinLocked = false;
+var pinAttempts = 0;
+
+function pinKey(n) {
+  if(pinLocked) return;
+  if(pinEntry.length >= 6) return;
+  pinEntry += n;
+  updateDots();
+  if(pinEntry.length === 6) {
+    setTimeout(checkPin, 200);
+  }
+}
+function pinDel() {
+  if(pinLocked) return;
+  pinEntry = pinEntry.slice(0,-1);
+  updateDots();
+  document.getElementById('pinMsg').textContent = '';
+}
+function updateDots() {
+  for(var i=0;i<6;i++) {
+    var d = document.getElementById('d'+i);
+    d.style.background = i < pinEntry.length ? '#c9a84c' : 'transparent';
+    d.style.borderColor = i < pinEntry.length ? '#c9a84c' : '#2a2a2e';
+  }
+}
+function checkPin() {
+  if(pinEntry === PIN_CORRECT) {
+    document.getElementById('pinScreen').style.display = 'none';
+  } else {
+    pinAttempts++;
+    pinEntry = '';
+    updateDots();
+    if(pinAttempts >= 5) {
+      pinLocked = true;
+      document.getElementById('pinMsg').textContent = 'Bloqueado. Recarga la pagina.';
+    } else {
+      document.getElementById('pinMsg').textContent = 'PIN incorrecto. Intento ' + pinAttempts + ' de 5.';
+    }
+  }
+}
+</script>
+
 <header>
   <div class="logo">Luis Corpo <span>Connect</span></div>
   <div class="dbadge" id="dateBadge"></div>
