@@ -263,10 +263,10 @@ function checkPin() {
     <div class="pvb" id="prevBox">
       <div class="ct" style="margin-bottom:10px">Vista previa</div>
       <div id="prevRows"></div>
-      <div class="fe">
-        <button class="btn bg" onclick="resetForm()">Limpiar</button>
-        <button class="btn bp" onclick="guardarOp()">Guardar</button>
-      </div>
+    </div>
+    <div class="fe" style="margin-top:14px">
+      <button class="btn bg" onclick="resetForm()">Limpiar</button>
+      <button class="btn bp" style="min-width:120px;padding:12px 24px;font-size:13px" onclick="guardarOp()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1097,21 +1097,35 @@ function calcPrev() {
   var c=null;
   for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
   if(!c) return;
-  var r=calcular(imp,c.com,c.tipo,c.comSub);
-  var sc=r.retCli-trn;
   var sub=null;
   for(var i=0;i<S.subagentes.length;i++) if(S.subagentes[i].id===c.subId){sub=S.subagentes[i];break;}
   var rows=[];
-  if(tipoEnt==='solocom'&&factura>0) rows.push(['Importe Factura (informativo)',fmt(factura),'t2']);
-  rows.push(['Importe depositado',fmt(imp),'']);
-  rows.push(['Retorno Oficina (.95%)',fmt(r.retOfic),'red']);
-  rows.push(['Retorno Cliente ('+c.com+'%)',fmt(r.retCli),'grn']);
-  if(trn) rows.push(['Transfer incluida','- '+fmt(trn),'org']);
-  if(trn) rows.push(['Saldo neto cliente',fmt(sc),'gld']);
-  rows.push(['RLC (.05%)',fmt(r.rlc),'blu']);
-  rows.push(['Recuperacion (.25%)',fmt(r.rec),'blu']);
-  if(sub) rows.push(['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(r.comSub),'pur']);
-  rows.push(['CK (ganancia)',fmt(r.ck),'gld']);
+  if(tipoEnt==='solocom'&&factura>0){
+    var rFac=calcular(factura,c.com,c.tipo,c.comSub);
+    var totalCostos=rFac.ofic+rFac.rlc+rFac.rec+(sub?rFac.comSub:0);
+    var saldoCli=imp-totalCostos;
+    rows.push(['Factura (base de calculo)',fmt(factura),'t2']);
+    rows.push(['Importe recibido',fmt(imp),'']);
+    rows.push(['Oficina (.95%)',fmt(rFac.ofic),'red']);
+    rows.push(['RLC (.05%)',fmt(rFac.rlc),'blu']);
+    rows.push(['Recuperacion (.25%)',fmt(rFac.rec),'blu']);
+    if(sub) rows.push(['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(rFac.comSub),'pur']);
+    rows.push(['Total costos',fmt(totalCostos),'red']);
+    rows.push(['Saldo cliente (imp - costos)',fmt(saldoCli),saldoCli>=0?'grn':'red']);
+    rows.push(['CK (ganancia)',fmt(rFac.ck),'gld']);
+  } else {
+    var r=calcular(imp,c.com,c.tipo,c.comSub);
+    var sc=r.retCli-trn;
+    rows.push(['Importe depositado',fmt(imp),'']);
+    rows.push(['Retorno Oficina (.95%)',fmt(r.retOfic),'red']);
+    rows.push(['Retorno Cliente ('+c.com+'%)',fmt(r.retCli),'grn']);
+    if(trn) rows.push(['Transfer incluida','- '+fmt(trn),'org']);
+    if(trn) rows.push(['Saldo neto cliente',fmt(sc),'gld']);
+    rows.push(['RLC (.05%)',fmt(r.rlc),'blu']);
+    rows.push(['Recuperacion (.25%)',fmt(r.rec),'blu']);
+    if(sub) rows.push(['Subagente '+sub.nombre+' ('+c.comSub+'%)',fmt(r.comSub),'pur']);
+    rows.push(['CK (ganancia)',fmt(r.ck),'gld']);
+  }
   var h='';
   for(var i=0;i<rows.length;i++) h+='<div class="pvr"><span class="lb">'+rows[i][0]+'</span><span class="vl '+rows[i][2]+'">'+rows[i][1]+'</span></div>';
   document.getElementById('prevRows').innerHTML=h;
@@ -1127,26 +1141,50 @@ function guardarOp() {
   var not=document.getElementById('f_not').value.trim();
   var tipoEnt=document.getElementById('f_tipoEnt').value;
   var factura=tipoEnt==='solocom'?(parseFloat(document.getElementById('f_factura').value)||0):0;
-  if(!tit||!cid||!imp){alert('Titulo, cliente e importe requeridos');return;}
+  if(!tit||!cid||!imp){alert('Faltan datos: titulo='+tit+' cid='+cid+' imp='+imp);return;}
   var c=null;
   for(var i=0;i<S.clientes.length;i++) if(S.clientes[i].id===cid){c=S.clientes[i];break;}
-  var r=calcular(imp,c.com,c.tipo,c.comSub);
+  if(!c){alert('Cliente no encontrado id='+cid);return;}
+
+  var retOfic,retCli,saldoCli,rlc,rec,comSub,ck;
+  if(tipoEnt==='solocom'&&factura>0){
+    // Costs based on factura amount, client gets imp minus those costs
+    var rFac=calcular(factura,c.com,c.tipo,c.comSub);
+    var totalCostos=rFac.ofic+rFac.rlc+rFac.rec+rFac.comSub;
+    retOfic=0;                   // no proveedor movement in solo comision
+    retCli=imp-totalCostos;      // client gets imp minus all costs = $4,000
+    saldoCli=imp-totalCostos;    // same - net for client
+    rlc=rFac.rlc; rec=rFac.rec; comSub=rFac.comSub; ck=rFac.ck;
+  } else {
+    var r=calcular(imp,c.com,c.tipo,c.comSub);
+    retOfic=r.retOfic; retCli=r.retCli;
+    saldoCli=r.retCli-trn;
+    rlc=r.rlc; rec=r.rec; comSub=r.comSub; ck=r.ck;
+  }
+
   S.movimientos.unshift({
     id:Date.now(),titulo:tit,cid:cid,prov:prov,fecha:fec,notas:not,
-    importe:imp,trans:trn,retOfic:r.retOfic,retCli:r.retCli,
-    saldoCli:r.retCli-trn,rlc:r.rlc,rec:r.rec,comSub:r.comSub,ck:r.ck,
+    importe:imp,trans:trn,retOfic:retOfic,retCli:retCli,
+    saldoCli:saldoCli,rlc:rlc,rec:rec,comSub:comSub,ck:ck,
     soloComision:tipoEnt==='solocom',factura:factura
   });
-  saveS(); resetForm(); alert('Guardado');
+  saveS();
+  resetForm();
+  renderDashboard();
+  alert('Guardado correctamente');
 }
 function resetForm() {
   var flds=['f_tit','f_imp','f_trn','f_not','f_factura'];
-  for(var i=0;i<flds.length;i++) document.getElementById(flds[i]).value='';
-  document.getElementById('f_cli').value='';
-  document.getElementById('f_tipoEnt').value='normal';
-  document.getElementById('f_facturaGrp').style.display='none';
-  document.getElementById('f_fec').value=today();
-  document.getElementById('prevBox').classList.remove('on');
+  for(var i=0;i<flds.length;i++){
+    var el=document.getElementById(flds[i]);
+    if(el) el.value='';
+  }
+  var cli=document.getElementById('f_cli'); if(cli) cli.value='';
+  var prov=document.getElementById('f_prov'); if(prov) prov.value='L5';
+  var tipo=document.getElementById('f_tipoEnt'); if(tipo) tipo.value='normal';
+  var fecEl=document.getElementById('f_fec'); if(fecEl) fecEl.value=today();
+  var factGrp=document.getElementById('f_facturaGrp'); if(factGrp) factGrp.style.display='none';
+  var box=document.getElementById('prevBox'); if(box) box.classList.remove('on');
 }
 
 function onSTipo() {
@@ -1195,7 +1233,7 @@ function guardarSalida() {
   document.getElementById('s_extPrev').style.display='none'; document.getElementById('s_extG').style.display='none';
   document.getElementById('s_trnG').style.display='none'; document.getElementById('s_tipo').value='transferencia';
   document.getElementById('s_trn').checked=false;
-  renderSalidas(); alert('Salida registrada');
+  renderSalidas(); renderDashboard(); alert('Salida registrada');
 }
 function eliminarSalida(id) {
   var s=null; for(var i=0;i<S.salidas.length;i++) if(S.salidas[i].id===id){s=S.salidas[i];break;}
@@ -1522,6 +1560,17 @@ function renderEC(){
     }
     h+='</tbody></table></div>';
   } else { h+='<div class="empty">Sin movimientos</div>'; }
+  // Totals summary box
+  var totalEntradas=0, totalSalidas=0;
+  for(var i=0;i<movs.length;i++) totalEntradas+=movs[i].saldoCli;
+  for(var i=0;i<sals.length;i++) totalSalidas+=sals[i].montoCli;
+  h+='<div style="background:var(--s2);border:2px solid '+(sp>=0?'var(--grn)':'var(--red)')+';border-radius:8px;padding:14px 16px;margin-top:12px">';
+  h+='<div class="pvr"><span class="lb">Total abonado al cliente</span><span class="vl grn">'+fmt(totalEntradas)+'</span></div>';
+  h+='<div class="pvr"><span class="lb">Total pagado al cliente</span><span class="vl red">'+fmt(totalSalidas)+'</span></div>';
+  h+='<div style="border-top:2px solid var(--bdr);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;align-items:center">';
+  h+='<span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t2)">SALDO A FAVOR</span>';
+  h+='<span style="font-size:24px;font-weight:800;color:'+(sp>=0?'var(--grn)':'var(--red)')+'">'+fmt(sp)+'</span>';
+  h+='</div></div>';
   h+='<div class="fe"><button class="btn bp" onclick="genECWA('+cid+')">Copiar WhatsApp</button></div>';
   el.innerHTML=h;
 }
@@ -1573,14 +1622,45 @@ function genECWA(cid){
   var txt='ESTADO DE CUENTA\n====================\nCliente: '+cli.nombre+'\nFecha: '+today()+'\n====================\n\n';
   for(var i=0;i<evs.length;i++){
     var ev=evs[i];
-    if(ev.t==='e'){var m=ev.d;acum+=m.saldoCli;txt+=m.fecha+' - '+m.titulo+'\n  Deposito: '+fmt(m.importe)+'\n  Retorno: '+fmt(m.retCli)+'\n'+(m.trans?'  Trans incl: -'+fmt(m.trans)+'\n':'')+'  Acum: '+fmt(acum)+'\n\n';}
+    if(ev.t==='e'){
+      var m=ev.d; acum+=m.saldoCli;
+      var tipoLabel = m.soloComision ? 'Solo Comision' : 'Deposito';
+      txt+=m.fecha+' - '+m.titulo+'\n';
+      if(m.soloComision&&m.factura) txt+='  Factura: '+fmt(m.factura)+'\n';
+      txt+='  '+tipoLabel+': '+fmt(m.importe)+'\n';
+      txt+='  Abono: +'+fmt(m.saldoCli)+'\n';
+      if(m.trans) txt+='  Trans incl: -'+fmt(m.trans)+'\n';
+      txt+='\n';
+    }
     else{
       var s=ev.d;
-      if(s.tipo==='extranjero'&&s.comExtM){acum-=s.montoCli;txt+=s.fecha+' - Trans. Extranjero\n'+(s.ref?'  Ref: '+s.ref+'\n':'')+'  Transferencia: -'+fmt(s.montoTotal)+'\n  Comision Extranjero ('+s.comExt+'%): -'+fmt(s.comExtM)+'\n  Total cargo: -'+fmt(s.montoCli)+'\n  Acum: '+fmt(acum)+'\n\n';}
-      else{acum-=s.montoCli;var tp=s.tipo==='transferencia'?'Transferencia':s.tipo==='efectivo'?(s.transito?'Efectivo (Transito)':'Efectivo'):'Extranjero';txt+=s.fecha+' - '+tp+'\n'+(s.ref?'  Ref: '+s.ref+'\n':'')+'  -'+fmt(s.montoCli)+' - Acum: '+fmt(acum)+'\n\n';}
+      if(s.tipo==='extranjero'&&s.comExtM){
+        acum-=s.montoCli;
+        txt+=s.fecha+' - Trans. Extranjero\n';
+        if(s.ref) txt+='  Ref: '+s.ref+'\n';
+        txt+='  Transferencia: -'+fmt(s.montoTotal)+'\n';
+        txt+='  Comision Extran. ('+s.comExt+'%): -'+fmt(s.comExtM)+'\n';
+        txt+='  Total cargo: -'+fmt(s.montoCli)+'\n\n';
+      } else {
+        acum-=s.montoCli;
+        var tp=s.tipo==='transferencia'?'Transferencia':s.tipo==='efectivo'?(s.transito?'Efectivo (Transito)':'Efectivo'):'Extranjero';
+        txt+=s.fecha+' - '+tp+'\n';
+        if(s.ref) txt+='  Ref: '+s.ref+'\n';
+        txt+='  Pago: -'+fmt(s.montoCli)+'\n\n';
+      }
     }
   }
-  txt+='====================\nSALDO: '+fmt(getSaldoCli(cid))+'\n====================';
+  var totalEnt=0, totalSal=0;
+  for(var i=0;i<movs.length;i++) totalEnt+=movs[i].saldoCli;
+  for(var i=0;i<sals.length;i++) totalSal+=sals[i].montoCli;
+  var saldoFinal=getSaldoCli(cid);
+  txt+='====================\n';
+  txt+='RESUMEN\n';
+  txt+='Total abonado:  '+fmt(totalEnt)+'\n';
+  txt+='Total pagado:   '+fmt(totalSal)+'\n';
+  txt+='====================\n';
+  txt+='SALDO A FAVOR: '+fmt(saldoFinal)+'\n';
+  txt+='=='+'====================';
   document.getElementById('moECtit').textContent='EC - '+cli.nombre;
   document.getElementById('moECtxt').textContent=txt;
   document.getElementById('moEC').classList.add('on');
